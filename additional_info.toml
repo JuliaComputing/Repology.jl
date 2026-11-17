@@ -136,3 +136,14 @@ url_patterns = ["^https?://[^/]+/(?:pub/)?gnu/ncurses/ncurses-(\\d[^/]*)\\.tar\\
 [util-linux]
 # Repology attributes some of these tarballs to the util-linux-libuuid subpackage
 url_patterns = ["^\\Qhttps://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v\\E[^/]+\\Q/util-linux-\\E(\\d[^/]*)\\Q.tar.xz\\E$"]
+
+# Downstream subpackages built from these upstream tarballs (emacs:nxml-libvirt-schemas, ffmpeg-static-libs-for-sunshine,
+# node-bokehjs) can be the only Repology packages still using a given release URL
+[ffmpeg]
+url_patterns = ["^\\Qhttps://ffmpeg.org/releases/ffmpeg-\\E(\\d[^/]*)\\Q.tar.\\E\\w+$"]
+
+[libvirt]
+url_patterns = ["^https?://(?:download\\.libvirt\\.org|libvirt\\.org/sources)/libvirt-(\\d[^/]*)\\Q.tar.\\E\\w+$"]
+
+["python:bokeh"]
+url_patterns = ["^\\Qhttps://files.pythonhosted.org/packages/source/b/bokeh/bokeh-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]

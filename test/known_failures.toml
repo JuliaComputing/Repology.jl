@@ -9,7 +9,7 @@ got = "nothing nothing"
 url = "https://grass.osgeo.org/grass78/source/grass-7.8.5.tar.gz"
 [[failure]]
 expected = "ghostscript 9.55.0"
-got = "nothing nothing"
+got = "ghostscript nothing"
 url = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs9550/ghostscript-9.55.0.tar.gz"
 [[failure]]
 expected = "htop 2.2.0"

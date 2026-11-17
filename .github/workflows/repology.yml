@@ -12,19 +12,9 @@ jobs:
       run:
         shell: bash # -eo pipefail
     env:
-      POSTGRESQL: 17
       REPOLOGY_DATA_OUT: ${{ runner.temp }}/repology_data
 
     steps:
-      - name: Maximize build disk space
-        uses: easimon/maximize-build-space@fc881a613ad2a34aca9c9624518214ebc21dfc0c # v10
-        with:
-          remove-dotnet: true
-          remove-android: true
-          remove-haskell: true
-          remove-codeql: true
-          remove-docker-images: true
-
       - name: Checkout source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -43,39 +33,6 @@ jobs:
       - name: Install Julia dependencies
         run: |
             julia --project=. -e 'using Pkg; Pkg.instantiate()'
-
-      - name: Install repology/postgres dependencies
-        run: |
-          curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main $POSTGRESQL" > /etc/apt/sources.list.d/pgdg.list'
-          sudo apt-get update
-          sudo apt-get install postgresql-$POSTGRESQL postgresql-server-dev-$POSTGRESQL
-      - name: Install libversion
-        run: |
-          mkdir _libversion
-          cd _libversion
-          wget -qO- https://github.com/repology/libversion/archive/master.tar.gz | tar -xzf- --strip-components 1
-          cmake .
-          make
-          sudo make install
-          sudo ldconfig
-      - name: Install postgresql-libversion
-        run: |
-          mkdir _postgresql-libversion
-          cd _postgresql-libversion
-          wget -qO- https://github.com/repology/postgresql-libversion/archive/master.tar.gz | tar -xzf- --strip-components 1
-          make
-          sudo make install
-      - name: Setup database # TODO: Maybe user a proper GitHub action service?
-        run: |
-          sudo pg_createcluster $POSTGRESQL main --start
-          sudo -u postgres psql -p 5433 -c "CREATE DATABASE repology"
-          sudo -u postgres psql -p 5433 -c "CREATE USER repology WITH PASSWORD 'repology'"
-          sudo -u postgres psql -p 5433 -c "GRANT ALL ON DATABASE repology TO repology"
-          sudo -u postgres psql -p 5433 -c "GRANT pg_write_server_files TO repology"
-          sudo -u postgres psql -p 5433 --dbname repology -c "GRANT CREATE ON SCHEMA public TO PUBLIC"
-          sudo -u postgres psql -p 5433 --dbname repology -c "CREATE EXTENSION pg_trgm"
-          sudo -u postgres psql -p 5433 --dbname repology -c "CREATE EXTENSION libversion"
 
       - name: Update package components
         id: update

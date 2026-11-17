@@ -1,44 +1,67 @@
 using TOML: TOML
+using Repology: Repology
 using DataStructures: DefaultDict, DefaultOrderedDict, OrderedDict
-using CSV: CSV
-using DataFrames: DataFrames, DataFrame, groupby, combine, transform, combine, eachrow
+using DataFrames: DataFrames, DataFrame, groupby, combine, transform, eachrow, nrow, select!, Not
 
-function import_dump()
-    run(pipeline(`curl -s https://dumps.repology.org/repology-database-dump-latest.sql.zst`,
-        `zstd -d`,
-        `psql -v ON_ERROR_STOP=1`))
+const DUMP_URL = "https://dumps.repology.org/repology-database-dump-latest.sql.zst"
+
+# Values in a COPY ... FROM stdin block are tab-separated, with \\N for NULL and backslash escapes
+copy_value(s) = s == "\\N" ? missing : occursin('\\', s) ? unescape_string(s) : String(s)
+
+"""
+    read_dump(io)
+
+Stream Repology's SQL dump and keep only what we need from the `links`, `packages` and `manual_cpes` tables. This
+avoids restoring the full dump (tens of GB) into PostgreSQL.
+"""
+function read_dump(io)
+    links = Dict{Int32,String}()
+    pkgs = (link_type=Int8[], link_id=Int32[], repo=String[], effname=String[], rawversion=String[],
+        arch=Union{String,Missing}[], origversion=String[])
+    pkg_cpes = Set{Tuple{String,String}}()
+    manual_cpes = Tuple{String,String}[]
+    intern = Dict{String,String}()
+    table, cols = "", Dict{String,Int}()
+    for line in eachline(io)
+        if isempty(table)
+            m = match(r"^COPY repology\.(\w+) \((.*)\) FROM stdin;$", line)
+            isnothing(m) && continue
+            table = m.captures[1] in ("links", "packages", "manual_cpes") ? m.captures[1] : "skip"
+            cols = Dict(strip(c, ['"', ' ']) => i for (i, c) in enumerate(split(m.captures[2], ", ")))
+            continue
+        end
+        line == "\\." && (table = ""; continue)
+        table == "skip" && continue
+        f = split(line, '\t')
+        if table == "links"
+            links[parse(Int32, f[cols["id"]])] = copy_value(f[cols["url"]])
+        elseif table == "packages"
+            effname = get!(intern, f[cols["effname"]], f[cols["effname"]])
+            vendor, product = copy_value(f[cols["cpe_vendor"]]), copy_value(f[cols["cpe_product"]])
+            !ismissing(vendor) && !ismissing(product) && push!(pkg_cpes, (effname, "$vendor:$product"))
+            repo = get!(intern, f[cols["repo"]], f[cols["repo"]])
+            arch = copy_value(f[cols["arch"]])
+            arch = ismissing(arch) ? missing : get!(intern, arch, arch)
+            rawversion, origversion = copy_value(f[cols["rawversion"]]), copy_value(f[cols["origversion"]])
+            for m in eachmatch(r"\[(\d+), (\d+)", f[cols["links"]])
+                t = parse(Int8, m.captures[1])
+                t in (1, 2) || continue
+                push!(pkgs.link_type, t); push!(pkgs.link_id, parse(Int32, m.captures[2]))
+                push!(pkgs.repo, repo); push!(pkgs.effname, effname); push!(pkgs.rawversion, rawversion)
+                push!(pkgs.arch, arch); push!(pkgs.origversion, origversion)
+            end
+        elseif table == "manual_cpes"
+            vendor, product = copy_value(f[cols["cpe_vendor"]]), copy_value(f[cols["cpe_product"]])
+            !ismissing(vendor) && !ismissing(product) && push!(manual_cpes, (String(f[cols["effname"]]), "$vendor:$product"))
+        end
+    end
+    df = DataFrame(pkgs)
+    df.url = [links[id] for id in df.link_id]
+    select!(df, Not(:link_id))
+    return df, pkg_cpes, manual_cpes
 end
 
-function gather_links()
-    @info "gather repositories from package downloads"
-    sql = """
-        COPY (SELECT
-            (elem.value ->> 0)::integer AS link_type,
-            l.url,
-            p.repo,
-            p.effname,
-            p.rawversion,
-            p.arch,
-            p.origversion,
-            p.versionclass
-        FROM packages p
-        CROSS JOIN LATERAL json_array_elements(p.links) AS elem(value)
-        JOIN links l ON l.id = (elem.value ->> 1)::integer
-        WHERE ((elem.value ->> 0)::integer = 1 or (elem.value ->> 0)::integer = 2))
-        TO STDOUT WITH (format csv);
-    """
-    df = mktemp() do _, io
-        run(pipeline(`psql -U repology -c $sql`, stdout=io))
-        seekstart(io)
-        CSV.read(io, DataFrame, header=["link_type",
-            "url",
-            "repo",
-            "effname",
-            "arch",
-            "rawversion",
-            "origversion",
-            "versionclass"])
-    end
+function gather_links(df)
     # We'll only trust download URLs when only one was used for the given package
     # Many packages have more than one download, but then we don't know if that was a (build) dependency
     # or the actual project or perhaps some larger meta-project that vendors lots of deps.
@@ -85,58 +108,39 @@ function gather_links()
     return downloads, repositories
 end
 
-function gather_cpes()
-    @info "gather CPEs"
-    sql = """
-        COPY (SELECT DISTINCT
-            p.effname,
-            p.cpe_vendor || ':' || p.cpe_product AS cpe
-        FROM packages p
-        WHERE p.cpe_vendor IS NOT NULL AND p.cpe_product IS NOT NULL)
-        TO STDOUT WITH (format csv);
-    """
-    df = mktemp() do _, io
-        run(pipeline(`psql -U repology -c $sql`, stdout=io))
-        seekstart(io)
-        CSV.read(io, DataFrame, header=["effname", "cpe"])
-    end
+function gather_cpes(pkg_cpes, manual_cpes)
     cpes = Dict{String,Vector{String}}()
-    for row in eachrow(df)
-        push!(get!(cpes, row.effname, String[]), row.cpe)
+    for (effname, cpe) in sort!(collect(pkg_cpes))
+        push!(get!(cpes, effname, String[]), cpe)
     end
     # And now override those with manual entries, if they exist:
-    sql = """
-        COPY (SELECT
-            p.effname,
-            p.cpe_vendor || ':' || p.cpe_product AS cpe
-        FROM manual_cpes p
-        WHERE p.cpe_vendor IS NOT NULL AND p.cpe_product IS NOT NULL)
-        TO STDOUT WITH (format csv);
-    """
-    df = mktemp() do _, io
-        run(pipeline(`psql -U repology -c $sql`, stdout=io))
-        seekstart(io)
-        CSV.read(io, DataFrame, header=["effname", "cpe"])
-    end
     cpe_overrides = Dict{String,Vector{String}}()
-    for row in eachrow(df)
-        push!(get!(cpe_overrides, row.effname, String[]), row.cpe)
+    for (effname, cpe) in manual_cpes
+        push!(get!(cpe_overrides, effname, String[]), cpe)
     end
     merge!(cpes, cpe_overrides)
     return cpes
 end
 
-function main()
-    if !success(`psql -U repology -c "SELECT * FROM packages LIMIT 1"`)
-        @info "building database"
-        import_dump()
+function main(dump=DUMP_URL)
+    @info "reading $dump"
+    df, pkg_cpes, manual_cpes = open(pipeline(isfile(dump) ? `cat $dump` : `curl -sSfL $dump`, `zstd -dc`)) do io
+        read_dump(io)
     end
+    @info "read $(nrow(df)) package links"
+    downloads, repositories = gather_links(df)
+    cpes = gather_cpes(pkg_cpes, manual_cpes)
 
-    downloads, repositories = gather_links()
-    cpes = gather_cpes()
-   
     data = get(ENV, "REPOLOGY_DATA_OUT", joinpath(@__DIR__, "..", "data"))
     mkpath(data)
+
+    # Each dump only has the packages that distributions currently ship, so download URLs for older releases (and
+    # repositories that are ambiguous this week) drop out of it. Keep previously-exported entries (from the current
+    # data artifact) unless the new dump says otherwise.
+    existing(file) = TOML.parsefile(joinpath(Repology.data_dir(), file))
+    downloads = merge(Dict(k => (v[1] => v[2]) for (k,v) in existing("downloads.toml")), downloads)
+    repositories = merge(Dict{String,String}(existing("repositories.toml")), repositories)
+    cpes = merge(Dict{String,Vector{String}}(k => String.(v) for (k,v) in existing("cpes.toml")), cpes)
 
     header = "# This file is autogenerated with data from https://repology.com"
     open("$data/repositories.toml", "w") do io
@@ -156,5 +160,5 @@ function main()
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    main()
+    main(ARGS...)
 end

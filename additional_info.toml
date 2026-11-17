@@ -147,3 +147,25 @@ url_patterns = ["^https?://(?:download\\.libvirt\\.org|libvirt\\.org/sources)/li
 
 ["python:bokeh"]
 url_patterns = ["^\\Qhttps://files.pythonhosted.org/packages/source/b/bokeh/bokeh-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
+
+[qtgraphs]
+url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtgraphs-\\E"]
+
+# The CLI has its own Repology project; "bitwarden" is the desktop app
+[bitwarden-cli]
+url_patterns = ["^\\Qhttps://github.com/bitwarden/clients/releases/download/cli-v\\E(\\d[^/]*)\\Q/bw-\\E"]
+
+# Repology splits PMIx between pmix and openpmix; the CPE is on openpmix
+[openpmix]
+url_patterns = ["^\\Qhttps://github.com/openpmix/openpmix/releases/download/v\\E(\\d[^/]*)\\Q/pmix-\\E\\1\\Q.tar.\\E\\w+$"]
+
+# Downstream packages (ptxdist's rsync3, AOSC's libtiff-5) can be the only ones still using a given release URL
+[rsync]
+url_patterns = ["^\\Qhttps://download.samba.org/pub/rsync/src/rsync-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
+
+[tiff]
+url_patterns = ["^\\Qhttps://download.osgeo.org/libtiff/tiff-\\E(\\d[^/]*)\\Q.tar.\\E\\w+$"]
+
+# python:quarto-cli is a PyPI wrapper
+[quarto]
+url_patterns = ["^\\Qhttps://github.com/quarto-dev/quarto-cli/releases/download/v\\E(\\d[^/]*)\\Q/quarto-\\E\\1-"]

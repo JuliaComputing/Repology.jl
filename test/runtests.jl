@@ -95,6 +95,9 @@ end
     @test vercmp(semver, "1.2.0-1", "1.2.0") == -1
     @test vercmp(semver, "1.2.0-dev", "1.2.0") == -1
     @test vercmp(semver, "1.2.0+build", "not a version") === nothing
+    @test vercmp(semver, "1.2.0+build.1", "1.2.0+build.2") == 0
+    @test vercmp(semver, "1.2.0+build", "1.2.0") == 0
+    @test vercmp(semver, "1.2.1+build", "1.2.0") == 1
     # Inferred schemes follow the forms a project has already released
     inferred = VersionScheme(:libversion, 0, false, Set([:hyphen_number]))
     @test vercmp(inferred, "7.1.2-1", "7.1.2") == 1

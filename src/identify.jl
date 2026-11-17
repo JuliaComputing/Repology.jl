@@ -197,9 +197,14 @@ function identify(url; commit=nothing, use_overrides=true)
         haskey(o, (url, something(commit, ""))) && return o[(url, something(commit, ""))]
     end
 
+    # Repology's data includes some VCS URLs with placeholder versions like "git"; keep only their project
     dls = download_data()
+    url_projs = String[]
     for u in (url, normalize_url(url))
-        haskey(dls, u) && return Identification(dls[u]..., "repology-url")
+        haskey(dls, u) || continue
+        proj, ver = dls[u]
+        is_plausible_version(proj, ver) && return Identification(proj, ver, "repology-url")
+        push!(url_projs, proj)
     end
 
     for (regex, proj) in curated_url_patterns()
@@ -210,7 +215,7 @@ function identify(url; commit=nothing, use_overrides=true)
     end
 
     repo, tag = forge_repository(url)
-    projs = unique!([repository_projects(repo); repository_projects(url)])
+    projs = unique!([repository_projects(repo); repository_projects(url); url_projs])
     if !isempty(projs)
         h = heuristic_match(url)
         proj = best_project(isnothing(h) ? projs : unique!([projs; h.project]))

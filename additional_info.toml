@@ -173,11 +173,11 @@ url_patterns = ["^\\Qhttps://github.com/quarto-dev/quarto-cli/releases/download/
 # Repology maps these repositories to a single (or the wrong) project
 [sdl2]
 repositories = ["https://github.com/libsdl-org/SDL.git"]
-tag_patterns = [{regex = "^release-(2\\..+)$"}]
+tag_patterns = [{regex = "^(?:pre)?release-(2\\..+)$"}]
 
 [sdl3]
 repositories = ["https://github.com/libsdl-org/SDL.git"]
-tag_patterns = [{regex = "^release-(3\\..+)$"}]
+tag_patterns = [{regex = "^(?:pre)?release-(3\\..+)$"}]
 
 [openpolicyagent]
 repositories = ["https://github.com/open-policy-agent/opa.git"]

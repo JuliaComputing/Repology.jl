@@ -35,7 +35,8 @@ end
     @test Repology.repository_projects("https://github.com/apache/tvm-ffi") == ["python:apache-tvm-ffi"]
     @test Repology.tag_project(["sdl2", "sdl3"], "release-2.32.10") == "sdl2"
     @test Repology.tag_project(["sdl2", "sdl3"], "release-3.2.0") == "sdl3"
-    @test Repology.tag_project(["sdl2", "sdl3"], "prerelease-3.1.0") === nothing
+    @test Repology.tag_project(["sdl2", "sdl3"], "prerelease-3.1.10") == "sdl3"
+    @test Repology.tag_project(["sdl2", "sdl3"], "v3.2.0") === nothing
     @test Repology.version_from_tag("sdl3", "release-3.2.0") == "3.2.0"
 end
 

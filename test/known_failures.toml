@@ -9,7 +9,7 @@ got = "nothing nothing"
 url = "https://grass.osgeo.org/grass78/source/grass-7.8.5.tar.gz"
 [[failure]]
 expected = "ghostscript 9.55.0"
-got = "nothing nothing"
+got = "ghostscript nothing"
 url = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs9550/ghostscript-9.55.0.tar.gz"
 [[failure]]
 expected = "htop 2.2.0"
@@ -139,6 +139,10 @@ url = "https://www.x.org/archive/individual/util/util-macros-1.20.2.tar.xz"
 expected = "xcb-proto 1.17.0"
 got = "nothing nothing"
 url = "https://www.x.org/archive/individual/xcb/xcb-proto-1.17.0.tar.xz"
+[[failure]]
+expected = "xorriso 1.5.6"
+got = "xorriso 1.5.6.pl02"
+url = "https://www.gnu.org/software/xorriso/xorriso-1.5.6.pl02.tar.gz"
 [[failure]]
 expected = "zeromq 4.3.2"
 got = "zeromq nothing"

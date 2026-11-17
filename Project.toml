@@ -1,20 +1,20 @@
 name = "Repology"
 uuid = "daaac842-7662-4d75-9bda-b596e444bdc5"
-authors = ["Matt Bauman <mbauman@juliahub.com>", "and contributors"]
 version = "1.0.0"
+authors = ["Matt Bauman <mbauman@juliahub.com>", "and contributors"]
 
 [deps]
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+libversion_jll = "536dcc1b-10b1-5f38-bd5e-495471764a69"
 
 [compat]
-CSV = "0.10.15"
 DataFrames = "1.8.0"
 DataStructures = "0.19.1"
 TOML = "1.0.3"
 julia = "1.10"
+libversion_jll = "3.0.3"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

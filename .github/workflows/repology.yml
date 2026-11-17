@@ -2,23 +2,17 @@ name: Export from Repology's DB dump
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: write
 
 jobs:
   repology-export:
     runs-on: ubuntu-latest
-    env:
-      POSTGRESQL: 17
 
     steps:
-      - name: Maximize build disk space
-        uses: easimon/maximize-build-space@v10
-        with:
-          remove-dotnet: true
-          remove-android: true
-          remove-haskell: true
-          remove-codeql: true
-          remove-docker-images: true
-
       - name: Checkout source
         uses: actions/checkout@v4
         with:
@@ -38,53 +32,27 @@ jobs:
         run: |
             julia --project=. -e 'using Pkg; Pkg.instantiate()'
 
-      - name: Install repology/postgres dependencies
-        run: |
-          curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main $POSTGRESQL" > /etc/apt/sources.list.d/pgdg.list'
-          sudo apt-get update
-          sudo apt-get install postgresql-$POSTGRESQL postgresql-server-dev-$POSTGRESQL
-      - name: Install libversion
-        run: |
-          mkdir _libversion
-          cd _libversion
-          wget -qO- https://github.com/repology/libversion/archive/master.tar.gz | tar -xzf- --strip-components 1
-          cmake .
-          make
-          sudo make install
-          sudo ldconfig
-      - name: Install postgresql-libversion
-        run: |
-          mkdir _postgresql-libversion
-          cd _postgresql-libversion
-          wget -qO- https://github.com/repology/postgresql-libversion/archive/master.tar.gz | tar -xzf- --strip-components 1
-          make
-          sudo make install
-      - name: Setup database # TODO: Maybe user a proper GitHub action service?
-        run: |
-          sudo pg_createcluster $POSTGRESQL main --start
-          sudo -u postgres psql -p 5433 -c "CREATE DATABASE repology"
-          sudo -u postgres psql -p 5433 -c "CREATE USER repology WITH PASSWORD 'repology'"
-          sudo -u postgres psql -p 5433 -c "GRANT ALL ON DATABASE repology TO repology"
-          sudo -u postgres psql -p 5433 -c "GRANT pg_write_server_files TO repology"
-          sudo -u postgres psql -p 5433 --dbname repology -c "GRANT CREATE ON SCHEMA public TO PUBLIC"
-          sudo -u postgres psql -p 5433 --dbname repology -c "CREATE EXTENSION pg_trgm"
-          sudo -u postgres psql -p 5433 --dbname repology -c "CREATE EXTENSION libversion"
-
       - name: Update package components
         id: update
         run: |
           julia --project=. scripts/update_repology_info.jl
 
+      - name: Check the corpus against the new data
+        env:
+          REPOLOGY_ALLOW_FIXED: 1
+        run: |
+          julia --project=. -e 'using Pkg; Pkg.test()'
+          julia --project=. scripts/known_failures.jl
+
       - name: Commit changes (if any)
         id: git_commit
         run: |
-            git add repology_info.toml
+            git add data/ test/known_failures.toml
             if git diff --cached --quiet; then
             echo "No changes to commit."
             echo "committed=false" >> $GITHUB_OUTPUT
             else
-            git commit -m "[automatic] update repology_info.toml"
+            git commit -m "[automatic] update Repology data"
             echo "committed=true" >> $GITHUB_OUTPUT
             fi
 

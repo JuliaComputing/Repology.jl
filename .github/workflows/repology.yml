@@ -80,7 +80,7 @@ jobs:
             REFRESH_BRANCH="automatic/repology-data-refresh-${base//\//-}"
             git push --force origin HEAD:"$REFRESH_BRANCH"
             {
-              echo "This Repology data refresh regressed corpus entries, so it was not pushed to \`$base\`. This PR records them in \`test/known_failures.toml\`; fix them in \`additional_info.toml\` (or accept them) before merging."
+              echo "This Repology data refresh regressed corpus entries, so it was not pushed to \`$base\`. This PR records them in \`test/known_failures.toml\`; before merging, either fix the regression in \`additional_info.toml\`, correct the entry in \`test/corpus.toml\` if the corpus was wrong and Repology is right, or accept it as a known failure."
               echo
               echo '```diff'
               cat /tmp/known_failures.diff

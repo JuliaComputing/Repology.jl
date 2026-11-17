@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   repology-export:
@@ -38,10 +39,15 @@ jobs:
           julia --project=. scripts/update_repology_info.jl
 
       - name: Check the corpus against the new data
+        id: corpus
         env:
           REPOLOGY_ALLOW_FIXED: 1
         run: |
-          julia --project=. -e 'using Pkg; Pkg.test()'
+          if julia --project=. -e 'using Pkg; Pkg.test()'; then
+            echo "passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "passed=false" >> $GITHUB_OUTPUT
+          fi
           julia --project=. scripts/known_failures.jl
 
       - name: Commit changes (if any)
@@ -49,17 +55,41 @@ jobs:
         run: |
             git add data/ test/known_failures.toml
             if git diff --cached --quiet; then
-            echo "No changes to commit."
-            echo "committed=false" >> $GITHUB_OUTPUT
+              echo "No changes to commit."
+              echo "committed=false" >> $GITHUB_OUTPUT
             else
-            git commit -m "[automatic] update Repology data"
-            echo "committed=true" >> $GITHUB_OUTPUT
+              git diff --cached -U0 test/known_failures.toml > /tmp/known_failures.diff
+              git commit -m "[automatic] update Repology data"
+              echo "committed=true" >> $GITHUB_OUTPUT
             fi
 
-      - name: Push directly to branch or main if exact
-        if: |
-            steps.git_commit.outputs.committed == 'true'
+      - name: Push to the current branch if the corpus passed
+        if: steps.git_commit.outputs.committed == 'true' && steps.corpus.outputs.passed == 'true'
         run: |
-            # For PRs, push to the PR's branch; for main, push to main
             current_branch="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
             git push origin HEAD:"$current_branch"
+
+      - name: Otherwise propose the refresh as a PR
+        if: steps.git_commit.outputs.committed == 'true' && steps.corpus.outputs.passed != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REFRESH_BRANCH: automatic/repology-data-refresh
+        run: |
+            # known_failures.toml now accepts the regressions, so anything still failing is a real bug
+            julia --project=. -e 'using Pkg; Pkg.test()'
+            base="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+            git push --force origin HEAD:"$REFRESH_BRANCH"
+            {
+              echo "This Repology data refresh regressed corpus entries, so it was not pushed to \`$base\`. This PR records them in \`test/known_failures.toml\`; fix them in \`additional_info.toml\` (or accept them) before merging."
+              echo
+              echo '```diff'
+              cat /tmp/known_failures.diff
+              echo '```'
+              echo
+              echo "From $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            } > /tmp/pr_body.md
+            if [ -n "$(gh pr list --head "$REFRESH_BRANCH" --state open --json number --jq '.[].number')" ]; then
+              gh pr edit "$REFRESH_BRANCH" --body-file /tmp/pr_body.md
+            else
+              gh pr create --base "$base" --head "$REFRESH_BRANCH" --title "[automatic] Repology data refresh with corpus regressions" --body-file /tmp/pr_body.md
+            fi

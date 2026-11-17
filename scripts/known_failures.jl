@@ -7,7 +7,7 @@ network = !isempty(get(ENV, "REPOLOGY_TEST_NETWORK", ""))
 for e in corpus
     haskey(e, "hash") && !network && continue
     id = Repology.identify(e["url"]; commit=get(e, "hash", nothing), use_overrides=false)
-    id.version == e["version"] && (e["kind"] != "manual" || id.project == e["project"]) && continue
+    id.version == e["version"] && id.project == e["project"] && continue
     push!(failures, Dict("url" => e["url"], (haskey(e, "hash") ? ("hash" => e["hash"],) : ())..., "expected" => "$(e["project"]) $(e["version"])",
         "got" => "$(something(id.project, "nothing")) $(something(id.version, "nothing"))"))
 end

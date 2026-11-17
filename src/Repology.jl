@@ -23,7 +23,7 @@ const REPOSITORY_DATA = Ref{Dict{String,String}}()
 function repository_data()
     isassigned(REPOSITORY_DATA) && return REPOSITORY_DATA[]
     data = TOML.parsefile(joinpath(data_dir(), "repositories.toml"))
-    for (k,v) in data
+    for (k,v) in sort!(collect(data), by=first)
         # also store normalized URLs directly for matching
         data[normalize_url(k)] = v
     end
@@ -33,7 +33,8 @@ const DOWNLOAD_DATA = Ref{Dict{String,Tuple{String,String}}}()
 function download_data()
     isassigned(DOWNLOAD_DATA) && return DOWNLOAD_DATA[]
     data = Dict{String,Tuple{String,String}}()
-    for (k,v) in TOML.parsefile(joinpath(data_dir(), "downloads.toml"))
+    # Iterate in sorted order so that collisions between normalized URLs resolve the same way on every Julia version
+    for (k,v) in sort!(collect(TOML.parsefile(joinpath(data_dir(), "downloads.toml"))), by=first)
         data[k] = (v[1], v[2])
         data[normalize_url(k)] = (v[1], v[2])
     end

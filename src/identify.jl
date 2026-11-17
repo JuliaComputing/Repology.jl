@@ -48,7 +48,7 @@ const CURATED_URL_PATTERNS = Ref{Vector{Pair{Regex,String}}}()
 function curated_url_patterns()
     isassigned(CURATED_URL_PATTERNS) && return CURATED_URL_PATTERNS[]
     pats = Pair{Regex,String}[]
-    for (proj, info) in additional_info(), pat in get(info, "url_patterns", String[])
+    for (proj, info) in sort!(collect(additional_info()), by=first), pat in get(info, "url_patterns", String[])
         push!(pats, Regex(pat) => proj)
     end
     return CURATED_URL_PATTERNS[] = pats
@@ -58,7 +58,7 @@ const CURATED_REPOSITORIES = Ref{Dict{String,String}}()
 function curated_repositories()
     isassigned(CURATED_REPOSITORIES) && return CURATED_REPOSITORIES[]
     repos = Dict{String,String}()
-    for (proj, info) in additional_info(), repo in get(info, "repositories", String[])
+    for (proj, info) in sort!(collect(additional_info()), by=first), repo in get(info, "repositories", String[])
         repos[repo] = proj
         repos[normalize_url(repo)] = proj
     end
@@ -121,8 +121,17 @@ end
 
 function parse_tag_version(tag)
     # Candidate start positions: digits that don't continue a number (v1.2, R_2_8_3, cli-v2025.1.3, tectonic@0.11.0)
+    # Archives named after a commit (like 3a5f1c2.tar.gz) carry no version
+    occursin(r"^[0-9a-f]{7,40}$", tag) && return nothing
     starts = [i for i in eachindex(tag) if isdigit(tag[i]) && (i == 1 || !(tag[prevind(tag, i)] in "0123456789."))]
+    # Never restart inside a standalone candidate that failed to parse (7.1.2-1 must not become 1), but do retry after
+    # one glued to a name (PCRE2-10.42)
+    skip_until = 0
     for s in starts
+        s <= skip_until && continue
+        if s == 1 || !isletter(tag[prevind(tag, s)])
+            skip_until = s + length(match(r"^[0-9A-Za-z._-]*", SubString(tag, s)).match) - 1
+        end
         m = match(r"^(\d+)(?:([._-])(\d+)(?:\2\d+)*)?(?:([._-]?)([A-Za-z]+)(\d*))?$", SubString(tag, s))
         isnothing(m) && continue
         numeric = m.captures[2] === nothing ? m.captures[1] :
@@ -178,7 +187,8 @@ end
 project_rank(proj) = (haskey(cpe_data(), proj) ? 0 : 1, contains(proj, ':') ? 1 : 0)
 best_project(projs) = isempty(projs) ? nothing : first(sort(projs, by=project_rank))
 
-is_git_commit(hash) = !isnothing(hash) && occursin(r"^[0-9a-f]{40}$", hash)
+# Full or abbreviated commit SHAs; longer hex strings (like sha256 download checksums) are not commits
+is_git_commit(hash) = !isnothing(hash) && occursin(r"^[0-9a-f]{7,40}$", hash)
 
 """
     identify(url; commit=nothing, use_overrides=true)

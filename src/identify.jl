@@ -19,15 +19,15 @@ Base.length(::Identification) = 2
 The possible values of [`Identification`](@ref)'s `provenance`, in the order they are attempted. When a version is
 identified, the provenance describes how the version was found; otherwise it describes how the project was found.
 
-* `"override"`: a hand-verified entry in `overrides.toml`
-* `"repology-url"`: an exact (or normalized) match of a download URL in Repology's data
+* `"override"`: a hand-verified source (URL and optional commit) in a project's `sources` in `additional_info.toml`
 * `"url-pattern"`: a curated URL pattern in `additional_info.toml`
+* `"repology-url"`: an exact (or normalized) match of a download URL in Repology's data
 * `"tag-scheme"`: a forge (e.g., GitHub) URL whose repository is known and whose tag parses as a version
 * `"git-tag"`: a repository URL and commit, where the commit is tagged with a tag that parses as a version
 * `"repository"`: a known repository, but no version could be determined
 * `"heuristic"`: a URL that matches the shape of a known download URL with a different version number
 """
-const PROVENANCES = ("override", "repology-url", "url-pattern", "tag-scheme", "git-tag", "repository", "heuristic")
+const PROVENANCES = ("override", "url-pattern", "repology-url", "tag-scheme", "git-tag", "repository", "heuristic")
 
 const ADDITIONAL_INFO = Ref{Dict{String,Any}}()
 additional_info() = isassigned(ADDITIONAL_INFO) ? ADDITIONAL_INFO[] :
@@ -37,9 +37,8 @@ const OVERRIDES = Ref{Dict{Tuple{String,String},Identification}}()
 function overrides()
     isassigned(OVERRIDES) && return OVERRIDES[]
     data = Dict{Tuple{String,String},Identification}()
-    for entry in get(TOML.parsefile(joinpath(@__DIR__, "..", "overrides.toml")), "override", [])
-        version = get(entry, "version", nothing)
-        data[(entry["url"], get(entry, "commit", ""))] = Identification(entry["project"], version, "override")
+    for (proj, info) in additional_info(), entry in get(info, "sources", [])
+        data[(entry["url"], get(entry, "commit", ""))] = Identification(proj, get(entry, "version", nothing), "override")
     end
     return OVERRIDES[] = data
 end
@@ -212,6 +211,13 @@ function identify(url; commit=nothing, use_overrides=true)
         haskey(o, (url, something(commit, ""))) && return o[(url, something(commit, ""))]
     end
 
+    for (regex, proj) in curated_url_patterns()
+        m = match(regex, url)
+        isnothing(m) && continue
+        ver = isempty(m.captures) || isnothing(m.captures[1]) ? nothing : String(m.captures[1])
+        return is_plausible_version(proj, ver) ? Identification(proj, ver, "url-pattern") : Identification(proj, nothing, "repository")
+    end
+
     # Repology's data includes some VCS URLs with placeholder versions like "git"; keep only their project
     dls = download_data()
     url_projs = String[]
@@ -220,13 +226,6 @@ function identify(url; commit=nothing, use_overrides=true)
         proj, ver = dls[u]
         is_plausible_version(proj, ver) && return Identification(proj, ver, "repology-url")
         push!(url_projs, proj)
-    end
-
-    for (regex, proj) in curated_url_patterns()
-        m = match(regex, url)
-        isnothing(m) && continue
-        ver = isempty(m.captures) || isnothing(m.captures[1]) ? nothing : String(m.captures[1])
-        return is_plausible_version(proj, ver) ? Identification(proj, ver, "url-pattern") : Identification(proj, nothing, "repository")
     end
 
     repo, tag = forge_repository(url)

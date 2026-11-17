@@ -59,6 +59,52 @@ end
 # scripts/build_corpus.jl. "manual" entries were hand-corrected and must match exactly; "jll-version" entries
 # are those whose upstream version equalled the JLL version, so only the version is checked.
 # Git sources (with a commit) require network access and are only checked if REPOLOGY_TEST_NETWORK is set.
+@testset "vercmp" begin
+    using Repology: vercmp, version_scheme, version_features, VersionScheme, P_IS_PATCH
+    # libversion defaults
+    @test vercmp("1.2.0-dev", "1.2.0") == -1
+    @test vercmp("1.2.0-rc1", "1.2.0") == -1
+    @test vercmp("7.1.2-1", "7.1.2") == 1
+    @test vercmp("1.10", "1.9") == 1
+    @test vercmp("7.1.2-9", "7.1.2.9") == 0
+    @test vercmp("9.2p1", "9.2") == -1
+    @test vercmp("9.2p1", "9.2"; flags=P_IS_PATCH) == 1
+
+    @test version_features("1.2.3") == Set()
+    @test version_features("1.2.3-rc1") == Set()
+    @test version_features("7.1.2-1") == Set([:hyphen_number])
+    @test version_features("9.2p1") == Set([:p_number])
+    @test version_features("1.0.2u") == Set([:letter_suffix])
+    @test version_features("1.2a1") == Set([:word])
+    @test version_features("1.2foo") == Set([:word])
+
+    # Unambiguous versions compare without knowing anything about the project
+    @test vercmp(nothing, "1.10", "1.9") == 1
+    @test vercmp(nothing, "2.0.0-rc1", "2.0.0") == -1
+    @test vercmp("expat", "2.8.3", "2.10.0") == -1
+    # Ambiguous ones need a scheme
+    @test vercmp(nothing, "1.2.0-1", "1.2.0") === nothing
+    @test vercmp(nothing, "9.2p1", "9.2") === nothing
+    @test vercmp("expat", "2.8.3-1", "2.8.3") === nothing
+    # Curated schemes
+    @test vercmp("imagemagick", "7.1.2-1", "7.1.2") == 1
+    @test vercmp("imagemagick", "7.1.2-10", "7.1.2-9") == 1
+    @test vercmp("openssh", "9.2p1", "9.2") == 1
+    @test vercmp("openssh", "9.3", "9.2p2") == 1
+    semver = VersionScheme(:semver, 0, true, Set{Symbol}())
+    @test vercmp(semver, "1.2.0-1", "1.2.0") == -1
+    @test vercmp(semver, "1.2.0-dev", "1.2.0") == -1
+    @test vercmp(semver, "1.2.0+build", "not a version") === nothing
+    # Inferred schemes follow the forms a project has already released
+    inferred = VersionScheme(:libversion, 0, false, Set([:hyphen_number]))
+    @test vercmp(inferred, "7.1.2-1", "7.1.2") == 1
+    @test vercmp(inferred, "9.2p1", "9.2") === nothing
+    scheme = version_scheme("imagemagick")
+    @test scheme.curated && scheme.kind === :libversion
+    @test version_scheme("openssh").flags == P_IS_PATCH
+    @test !version_scheme("expat").curated
+end
+
 @testset "corpus" begin
     corpus = TOML.parsefile(joinpath(@__DIR__, "corpus.toml"))["entry"]
     known_failures = Set((e["url"], get(e, "hash", "")) for e in get(TOML.parsefile(joinpath(@__DIR__, "known_failures.toml")), "failure", []))

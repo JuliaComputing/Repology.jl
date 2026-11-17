@@ -108,3 +108,10 @@ url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\
 repositories = ["https://github.com/JuliaStats/Rmath-julia.git"]
 url_patterns = ["^\\Qhttps://github.com/JuliaStats/Rmath-julia/archive/v\\E(\\d.*)\\Q.tar.gz\\E$"]
 
+[imagemagick]
+# 7.1.2-1 is a patch release after 7.1.2
+version_scheme = "libversion"
+
+[openssh]
+# 9.2p1 is a patch release after 9.2
+version_flags = ["P_IS_PATCH"]

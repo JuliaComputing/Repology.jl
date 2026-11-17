@@ -1,4 +1,14 @@
 # Extra information for packages that are in repology, but haven't used the sources we used (or were otherwise skipped from the dump extract)
+#
+# Per project, all optional:
+#   url_patterns   = regexes matching source URLs; the first capture group is the version. These take precedence
+#                    over Repology's own URL data.
+#   repositories   = source repository URLs
+#   tag_patterns   = regexes extracting the version from a git tag
+#   cpes           = CPE prefixes
+#   version_scheme / version_flags = how versions compare; see `Repology.version_scheme`
+#   sources        = hand-verified one-off sources that no pattern covers, e.g. an untagged commit; checked first:
+#                    sources = [{url = "https://github.com/owner/repo.git", commit = "0123abc...", version = "1.2.3"}]
 
 [ampl-asl]
 url_patterns = ["^\\Qhttp://netlib.org/ampl/solvers.tgz\\E()$"] # No versioning info available
@@ -115,3 +125,14 @@ version_scheme = "libversion"
 [openssh]
 # 9.2p1 is a patch release after 9.2
 version_flags = ["P_IS_PATCH"]
+
+[giflib]
+url_patterns = ["^\\Qhttps://sourceforge.net/projects/giflib/files/giflib-\\E[^/]+\\Q/giflib-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
+
+[ncurses]
+# GNU mirrors
+url_patterns = ["^https?://[^/]+/(?:pub/)?gnu/ncurses/ncurses-(\\d[^/]*)\\.tar\\.gz$"]
+
+[util-linux]
+# Repology attributes some of these tarballs to the util-linux-libuuid subpackage
+url_patterns = ["^\\Qhttps://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v\\E[^/]+\\Q/util-linux-\\E(\\d[^/]*)\\Q.tar.xz\\E$"]

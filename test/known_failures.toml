@@ -140,10 +140,6 @@ expected = "xcb-proto 1.17.0"
 got = "nothing nothing"
 url = "https://www.x.org/archive/individual/xcb/xcb-proto-1.17.0.tar.xz"
 [[failure]]
-expected = "xorriso 1.5.6"
-got = "xorriso 1.5.6.pl02"
-url = "https://www.gnu.org/software/xorriso/xorriso-1.5.6.pl02.tar.gz"
-[[failure]]
 expected = "zeromq 4.3.2"
 got = "zeromq nothing"
 url = "https://github.com/zeromq/libzmq.git"

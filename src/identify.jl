@@ -89,7 +89,7 @@ versions, so older versions are not rejected.
 function is_plausible_version(project, version)
     isnothing(version) && return false
     known = get(known_versions(), something(project, ""), Set{String}())
-    version in known && return true
+    version in known && occursin(r"\d", version) && return true # not placeholders like vim's "git"
     # A letter prefix is fine if the project's known versions share it (llama.cpp's b7821)
     prefix = match(r"^[A-Za-z]+(?=\d)", version)
     if !isnothing(prefix) && any(k -> occursin(Regex("^\\Q$(prefix.match)\\E\\d"), k), known)

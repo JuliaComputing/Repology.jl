@@ -117,6 +117,7 @@ include("corpus_match.jl")
     @test corpus_match(e, Identification("xorriso", "1.5.6", "repology-url"))
     @test !corpus_match(e, Identification("xorriso", "1.5.61", "repology-url"))
     @test !corpus_match(e, Identification("xorriso", "1.5.6.pl03", "repology-url"))
+    @test !corpus_match(e, Identification("xorriso", "1.5.6.pl0", "repology-url"))
     @test !corpus_match(e, Identification("xorriso", nothing, "repository"))
     @test !corpus_match(merge(e, Dict("kind" => "manual")), Identification("xorriso", "1.5.6.pl02", "repology-url"))
 end

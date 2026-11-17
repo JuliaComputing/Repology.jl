@@ -6,5 +6,5 @@ function corpus_match(e, id)
     e["kind"] == "manual" && return id.project == e["project"] && id.version == e["version"]
     id.version == e["version"] && return true
     rest = chopprefix(id.version, e["version"])
-    return rest != id.version && !isdigit(first(rest)) && occursin(id.version, e["url"])
+    return rest != id.version && !isdigit(first(rest)) && occursin(Regex("(?<![[:alnum:]])\\Q$(id.version)\\E(?![[:alnum:]])"), e["url"])
 end

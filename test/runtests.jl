@@ -42,6 +42,8 @@ end
     @test parse_tag_version("7.1.2-1") === nothing
     @test parse_tag_version("ImageMagick-7.1.1-47") === nothing
     @test parse_tag_version("processing-1434-4.5.6") == "4.5.6"
+    @test parse_tag_version("RELEASE.2025-09-07T16-13-09Z") === nothing
+    @test parse_tag_version("release.1.2.3") == "1.2.3"
     @test parse_tag_version("3a5f1c2") === nothing
     @test parse_tag_version("20190702") == "20190702"
     @test parse_tag_version("0123abc4567def") === nothing

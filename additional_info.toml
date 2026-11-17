@@ -121,6 +121,7 @@ url_patterns = ["^\\Qhttps://github.com/JuliaStats/Rmath-julia/archive/v\\E(\\d.
 [imagemagick]
 # 7.1.2-1 is a patch release after 7.1.2
 version_scheme = "libversion"
+url_patterns = ["^\\Qhttps://github.com/ImageMagick/ImageMagick6/archive/\\E(6\\.[^/]*)\\Q.tar.gz\\E$"]
 
 [openssh]
 # 9.2p1 is a patch release after 9.2
@@ -147,3 +148,86 @@ url_patterns = ["^https?://(?:download\\.libvirt\\.org|libvirt\\.org/sources)/li
 
 ["python:bokeh"]
 url_patterns = ["^\\Qhttps://files.pythonhosted.org/packages/source/b/bokeh/bokeh-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
+
+[qtgraphs]
+url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtgraphs-\\E"]
+
+# The CLI has its own Repology project; "bitwarden" is the desktop app
+[bitwarden-cli]
+url_patterns = ["^\\Qhttps://github.com/bitwarden/clients/releases/download/cli-v\\E(\\d[^/]*)\\Q/bw-\\E"]
+
+# Repology splits PMIx between pmix and openpmix; the CPE is on openpmix
+[openpmix]
+url_patterns = ["^\\Qhttps://github.com/openpmix/openpmix/releases/download/v\\E(\\d[^/]*)\\Q/pmix-\\E\\1\\Q.tar.\\E\\w+$"]
+
+# Downstream packages (ptxdist's rsync3, AOSC's libtiff-5) can be the only ones still using a given release URL
+[rsync]
+url_patterns = ["^\\Qhttps://download.samba.org/pub/rsync/src/rsync-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
+
+[tiff]
+url_patterns = ["^\\Qhttps://download.osgeo.org/libtiff/tiff-\\E(\\d[^/]*)\\Q.tar.\\E\\w+$"]
+
+# python:quarto-cli is a PyPI wrapper
+[quarto]
+url_patterns = ["^\\Qhttps://github.com/quarto-dev/quarto-cli/releases/download/v\\E(\\d[^/]*)\\Q/quarto-\\E\\1-"]
+
+# Repology maps these repositories to a single (or the wrong) project
+[sdl2]
+repositories = ["https://github.com/libsdl-org/SDL.git"]
+tag_patterns = [{regex = "^(?:pre)?release-(2\\..+)$"}]
+
+[sdl3]
+repositories = ["https://github.com/libsdl-org/SDL.git"]
+tag_patterns = [{regex = "^(?:pre)?release-(3\\..+)$"}]
+
+[openpolicyagent]
+repositories = ["https://github.com/open-policy-agent/opa.git"]
+
+["python:apache-tvm-ffi"]
+repositories = ["https://github.com/apache/tvm-ffi.git"]
+
+# Release URLs that Repology's data doesn't cover
+[qdrant]
+url_patterns = ["^\\Qhttps://github.com/qdrant/qdrant/releases/download/v\\E(\\d[^/]*)\\Q/qdrant-\\E"]
+
+[t8code]
+url_patterns = ["^\\Qhttps://github.com/DLR-AMR/t8code/releases/download/v\\E(\\d[^/]*)\\Q/t8-\\E\\1\\Q.tar.gz\\E$"]
+
+[wayland]
+url_patterns = ["^\\Qhttps://wayland.freedesktop.org/releases/wayland-\\E(\\d[^/]*)\\Q.tar.\\E\\w+$"]
+
+[libxcb]
+url_patterns = ["^https?://(?:www\\.)?x\\.org/(?:archive/)?individual/xcb/libxcb-(\\d[^/]*)\\.tar\\.\\w+$"]
+
+[xcb-proto]
+url_patterns = ["^https?://(?:www\\.)?x\\.org/(?:archive/)?individual/(?:xcb|proto)/xcb-proto-(\\d[^/]*)\\.tar\\.\\w+$"]
+
+[util-macros]
+url_patterns = ["^https?://(?:www\\.)?x\\.org/(?:archive/)?individual/util/util-macros-(\\d[^/]*)\\.tar\\.\\w+$"]
+
+[htop]
+url_patterns = ["^https?://hisham\\.hm/htop/releases/[^/]+/htop-(\\d[^/]*)\\.tar\\.\\w+$"]
+
+[opus]
+url_patterns = ["^https?://archive\\.mozilla\\.org/pub/opus/opus-(\\d[^/]*)\\.tar\\.\\w+$"]
+
+[eudev]
+url_patterns = ["^\\Qhttps://dev.gentoo.org/~blueness/eudev/eudev-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
+
+[sundials]
+url_patterns = ["^https?://computation\\.llnl\\.gov/projects/sundials/download/sundials-(\\d[^/]*)\\.tar\\.gz$"]
+
+[libxslt]
+url_patterns = ["^ftp://xmlsoft\\.org/libxslt/libxslt-(\\d[^/]*)\\.tar\\.gz$"]
+
+[grass-gis]
+url_patterns = ["^\\Qhttps://grass.osgeo.org/grass\\E\\d+\\Q/source/grass-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
+
+[ghostscript]
+url_patterns = ["^\\Qhttps://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs\\E\\d+\\Q/ghostscript-\\E(\\d[^/]*)\\Q.tar.\\E\\w+$"]
+
+[biome]
+url_patterns = ["^\\Qhttps://github.com/biomejs/biome/archive/refs/tags/@biomejs/biome@\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
+
+[cudss]
+url_patterns = ["^\\Qhttps://developer.download.nvidia.com/compute/cudss/redist/libcudss/\\E[^/]+\\Q/libcudss-\\E[^/]+?-(\\d+\\.\\d+\\.\\d+\\.\\d+)_cuda"]

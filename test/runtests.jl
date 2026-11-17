@@ -15,7 +15,8 @@ using Test
 end
 
 @testset "identify provenance" begin
-    @test identify("https://github.com/libexpat/libexpat/releases/download/R_2_8_3/expat-2.8.3.tar.xz") == Identification("expat", "2.8.3", "repology-url")
+    @test identify("https://github.com/libexpat/libexpat/releases/download/R_2_8_3/expat-2.8.3.tar.xz") == Identification("expat", "2.8.3", "url-pattern")
+    @test identify("https://zlib.net/zlib-1.2.11.tar.gz") == Identification("zlib", "1.2.11", "repology-url")
     @test identify("https://github.com/libexpat/libexpat/releases/download/R_2_9_0/expat-2.9.0.tar.xz").version == "2.9.0"
     @test identify("https://github.com/wolfSSL/wolfssl/archive/refs/tags/v5.9.3-stable.tar.gz") == Identification("wolfssl", "5.9.3", "tag-scheme")
     @test identify("https://github.com/postgres/postgres/archive/refs/tags/REL_16_9.tar.gz") == Identification("postgresql", "16.9", "tag-scheme")
@@ -24,7 +25,7 @@ end
                 "https://github.com/postgres/postgres/archive/refs/tags/REL_16_9.tar.gz")
         @test identify(url).provenance in Repology.PROVENANCES
     end
-    # Overrides take precedence over everything else
+    # Hand-verified sources take precedence over everything else
     Repology.overrides()[("https://example.invalid/override-1.0.tar.gz", "")] = Identification("example", "1.0", "override")
     @test identify("https://example.invalid/override-1.0.tar.gz") == Identification("example", "1.0", "override")
     @test identify("https://example.invalid/override-1.0.tar.gz"; use_overrides=false).provenance != "override"

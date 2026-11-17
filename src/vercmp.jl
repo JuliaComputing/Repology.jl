@@ -108,7 +108,10 @@ vercmp(project::Union{AbstractString,Nothing}, a::AbstractString, b::AbstractStr
 function vercmp(scheme::VersionScheme, a::AbstractString, b::AbstractString)
     if scheme.kind === :semver
         va, vb = tryparse(VersionNumber, a), tryparse(VersionNumber, b)
-        return isnothing(va) || isnothing(vb) ? nothing : cmp(va, vb)
+        (isnothing(va) || isnothing(vb)) && return nothing
+        # SemVer precedence ignores build metadata, but VersionNumber comparisons don't
+        precedence(v) = VersionNumber(v.major, v.minor, v.patch, v.prerelease, ())
+        return cmp(precedence(va), precedence(vb))
     end
     scheme.curated || (version_features(a) ⊆ scheme.features && version_features(b) ⊆ scheme.features) || return nothing
     return vercmp(a, b; flags=scheme.flags)

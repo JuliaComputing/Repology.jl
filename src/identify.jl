@@ -122,7 +122,7 @@ end
 function parse_tag_version(tag)
     # Candidate start positions: digits that don't continue a number (v1.2, R_2_8_3, cli-v2025.1.3, tectonic@0.11.0)
     # Archives named after a commit (like 3a5f1c2.tar.gz) carry no version
-    occursin(r"^[0-9a-f]{7,40}$", tag) && return nothing
+    occursin(r"^[0-9a-f]{7,40}$", tag) && occursin(r"[a-f]", tag) && return nothing
     starts = [i for i in eachindex(tag) if isdigit(tag[i]) && (i == 1 || !(tag[prevind(tag, i)] in "0123456789."))]
     # Never restart inside a standalone candidate that failed to parse (7.1.2-1 must not become 1), but do retry after
     # one glued to a name (PCRE2-10.42)

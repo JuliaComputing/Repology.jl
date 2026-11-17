@@ -41,6 +41,7 @@ end
     @test parse_tag_version("nightly") === nothing
     @test parse_tag_version("7.1.2-1") === nothing
     @test parse_tag_version("3a5f1c2") === nothing
+    @test parse_tag_version("20190702") == "20190702"
     @test parse_tag_version("0123abc4567def") === nothing
     @test Repology.is_git_commit("3564038")
     @test !Repology.is_git_commit(repeat("a", 64))

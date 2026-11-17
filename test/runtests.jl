@@ -30,6 +30,13 @@ end
     @test identify("https://example.invalid/override-1.0.tar.gz") == Identification("example", "1.0", "override")
     @test identify("https://example.invalid/override-1.0.tar.gz"; use_overrides=false).provenance != "override"
     delete!(Repology.overrides(), ("https://example.invalid/override-1.0.tar.gz", ""))
+    # Curated repositories take precedence over Repology's, and tag_patterns pick between projects sharing a repository
+    @test Repology.repository_projects("https://github.com/open-policy-agent/opa") == ["openpolicyagent"]
+    @test Repology.repository_projects("https://github.com/apache/tvm-ffi") == ["python:apache-tvm-ffi"]
+    @test Repology.tag_project(["sdl2", "sdl3"], "release-2.32.10") == "sdl2"
+    @test Repology.tag_project(["sdl2", "sdl3"], "release-3.2.0") == "sdl3"
+    @test Repology.tag_project(["sdl2", "sdl3"], "prerelease-3.1.0") === nothing
+    @test Repology.version_from_tag("sdl3", "release-3.2.0") == "3.2.0"
 end
 
 @testset "tag parsing" begin

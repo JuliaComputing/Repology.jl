@@ -52,6 +52,10 @@ url_patterns = ["^\\Qhttps://github.com/llvm/llvm-project/releases/download/llvm
 [mbedtls]
 repositories = ["https://github.com/ARMmbed/mbedtls.git"]
 
+[msgpack-c]
+# Repology splits these release tarballs between msgpack and msgpack-c
+url_patterns = ["^\\Qhttps://github.com/msgpack/msgpack-c/releases/download/c-\\E(\\d[^/]*)\\Q/msgpack-c-\\E\\1\\Q.tar.gz\\E$"]
+
 [openspecfun]
 repositories = ["https://github.com/JuliaMath/openspecfun.git"]
 url_patterns = ["^\\Qhttps://github.com/JuliaMath/openspecfun/archive/v\\E(\\d.*)\\Q.tar.gz\\E$"]

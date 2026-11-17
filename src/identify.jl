@@ -53,13 +53,14 @@ function curated_url_patterns()
     return CURATED_URL_PATTERNS[] = pats
 end
 
-const CURATED_REPOSITORIES = Ref{Dict{String,String}}()
+# A repository can carry more than one project (e.g. SDL2 and SDL3); their tag_patterns tell them apart
+const CURATED_REPOSITORIES = Ref{Dict{String,Vector{String}}}()
 function curated_repositories()
     isassigned(CURATED_REPOSITORIES) && return CURATED_REPOSITORIES[]
-    repos = Dict{String,String}()
+    repos = Dict{String,Vector{String}}()
     for (proj, info) in sort!(collect(additional_info()), by=first), repo in get(info, "repositories", String[])
-        repos[repo] = proj
-        repos[normalize_url(repo)] = proj
+        union!(get!(repos, repo, String[]), [proj])
+        union!(get!(repos, normalize_url(repo), String[]), [proj])
     end
     return CURATED_REPOSITORIES[] = repos
 end
@@ -178,18 +179,24 @@ end
 function repository_projects(url)
     isnothing(url) && return String[]
     repos, curated = repository_data(), curated_repositories()
-    projs = String[]
-    for u in (url, string(url, ".git"), normalize_url(url))
-        haskey(curated, u) && push!(projs, curated[u])
-        haskey(repos, u) && push!(projs, repos[u])
-    end
-    return unique!(projs)
+    variants = (url, string(url, ".git"), normalize_url(url))
+    # Curated repositories take precedence over Repology's own repository data
+    projs = unique!(String[p for u in variants if haskey(curated, u) for p in curated[u]])
+    isempty(projs) || return projs
+    return unique!(String[repos[u] for u in variants if haskey(repos, u)])
 end
 
 # When a source could belong to several projects, prefer those that have a CPE (and so can be matched against
 # advisories) and then those that aren't a language-specific repackaging (like python:foo or rust:foo)
 project_rank(proj) = (haskey(cpe_data(), proj) ? 0 : 1, contains(proj, ':') ? 1 : 0)
 best_project(projs) = isempty(projs) ? nothing : first(sort(projs, by=project_rank))
+
+"The first of `projs` whose curated `tag_patterns` match `tag`, if any"
+function tag_project(projs, tag)
+    tag = String(strip(first(split(URIs_unescape(tag), '\n'))))
+    i = findfirst(p -> any(pat -> occursin(Regex(pat["regex"]), tag), get(get(additional_info(), p, Dict()), "tag_patterns", [])), projs)
+    return isnothing(i) ? nothing : projs[i]
+end
 
 # Full or abbreviated commit SHAs; longer hex strings (like sha256 download checksums) are not commits
 is_git_commit(hash) = !isnothing(hash) && occursin(r"^[0-9a-f]{7,40}$", hash)
@@ -234,13 +241,15 @@ function identify(url; commit=nothing, use_overrides=true)
         h = heuristic_match(url)
         proj = best_project(isnothing(h) ? projs : unique!([projs; h.project]))
         if !isnothing(tag)
-            ver = version_from_tag(proj, tag)
-            isnothing(ver) || return Identification(proj, ver, "tag-scheme")
+            p = something(tag_project(projs, tag), proj)
+            ver = version_from_tag(p, tag)
+            isnothing(ver) || return Identification(p, ver, "tag-scheme")
         end
         if !isnothing(commit)
             for t in tags_for_commit(something(repo, url), commit)
-                ver = version_from_tag(proj, t)
-                isnothing(ver) || return Identification(proj, ver, "git-tag")
+                p = something(tag_project(projs, t), proj)
+                ver = version_from_tag(p, t)
+                isnothing(ver) || return Identification(p, ver, "git-tag")
             end
         end
         !isnothing(h) && h.project == proj && return h

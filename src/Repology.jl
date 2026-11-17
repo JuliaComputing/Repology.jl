@@ -142,6 +142,7 @@ function get_tag_from_commit(repo, commit; git_cache=_GIT_CACHE, include_parent=
 end
 
 include("identify.jl")
+include("vercmp.jl")
 
 """
     (project, version) = identify_upstream(url, hash)

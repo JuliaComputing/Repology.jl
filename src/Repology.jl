@@ -7,7 +7,7 @@ const REPOSITORY_DATA = Ref{Dict{String,String}}()
 function repository_data()
     isassigned(REPOSITORY_DATA) && return REPOSITORY_DATA[]
     data = TOML.parsefile(joinpath(@__DIR__, "..", "data", "repositories.toml"))
-    for (k,v) in data
+    for (k,v) in sort!(collect(data), by=first)
         # also store normalized URLs directly for matching
         data[normalize_url(k)] = v
     end
@@ -17,7 +17,8 @@ const DOWNLOAD_DATA = Ref{Dict{String,Tuple{String,String}}}()
 function download_data()
     isassigned(DOWNLOAD_DATA) && return DOWNLOAD_DATA[]
     data = Dict{String,Tuple{String,String}}()
-    for (k,v) in TOML.parsefile(joinpath(@__DIR__, "..", "data", "downloads.toml"))
+    # Iterate in sorted order so that collisions between normalized URLs resolve the same way on every Julia version
+    for (k,v) in sort!(collect(TOML.parsefile(joinpath(@__DIR__, "..", "data", "downloads.toml"))), by=first)
         data[k] = (v[1], v[2])
         data[normalize_url(k)] = (v[1], v[2])
     end
@@ -28,7 +29,7 @@ const MAX_PREFIX_LENGTH = 120
 function download_prefix_regex_map()
     isassigned(DOWNLOAD_PREFIX_REGEX_MAP) && return DOWNLOAD_PREFIX_REGEX_MAP[]
     map = Dict{String,OrderedDict{String,String}}()
-    for (k,v) in download_data()
+    for (k,v) in sort!(collect(download_data()), by=first)
         version = chopprefix(v[2], "v") # drop an optional v prefix
         length(version) >= 3 || continue # ensure non-trivial version numbers
         version[1] in '0':'9' || continue # ensure version starts with a digit

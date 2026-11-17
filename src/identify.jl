@@ -88,9 +88,15 @@ versions, so older versions are not rejected.
 """
 function is_plausible_version(project, version)
     isnothing(version) && return false
-    occursin(r"^\d[0-9A-Za-z.+~-]*$", version) || return false
     known = get(known_versions(), something(project, ""), Set{String}())
     version in known && return true
+    # A letter prefix is fine if the project's known versions share it (llama.cpp's b7821)
+    prefix = match(r"^[A-Za-z]+(?=\d)", version)
+    if !isnothing(prefix) && any(k -> occursin(Regex("^\\Q$(prefix.match)\\E\\d"), k), known)
+        version = chopprefix(version, prefix.match)
+    end
+    # Underscores only introduce a qualifier (1.25.0_rc1); 8_3 is a munged tag
+    occursin(r"^\d[0-9A-Za-z.+~-]*(?:_[A-Za-z][0-9A-Za-z.+~-]*)?$", version) || return false
     majors = filter(!isnothing, leading_number.(collect(known)))
     length(majors) >= 3 || return true
     major = leading_number(version)
@@ -126,13 +132,15 @@ function parse_tag_version(tag)
     continues_number(i) = i > 1 && (isdigit(tag[prevind(tag, i)]) ||
         tag[prevind(tag, i)] == '.' && prevind(tag, i) > 1 && isdigit(tag[prevind(tag, prevind(tag, i))]))
     starts = [i for i in eachindex(tag) if isdigit(tag[i]) && !continues_number(i)]
+    # A lone v (v2.30.7-1, cli-v1.2) is a prefix, not a name
+    glued_to_name(i) = (m = match(r"[A-Za-z]+$", SubString(tag, 1, prevind(tag, i)))) !== nothing && lowercase(m.match) != "v"
     # A restart inside a standalone candidate that failed to parse must have more components than that candidate's
     # consistently-separated prefix: 7.1.2-1 must not become 1, but processing-1434-4.5.6 is 4.5.6. Candidates glued to
     # a name (PCRE2-10.42) never block later ones.
     skip_until, min_parts = 0, 0
     for s in starts
         inside = s <= skip_until
-        if !inside && (s == 1 || !isletter(tag[prevind(tag, s)]))
+        if !inside && !glued_to_name(s)
             skip_until = s + length(match(r"^[0-9A-Za-z._-]*", SubString(tag, s)).match) - 1
             min_parts = count(r"\d+", match(r"^\d+(?:([._-])\d+(?:\1\d+)*)?", SubString(tag, s)).match)
         end

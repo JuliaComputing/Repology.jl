@@ -73,11 +73,11 @@ jobs:
         if: steps.git_commit.outputs.committed == 'true' && steps.corpus.outputs.passed != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          REFRESH_BRANCH: automatic/repology-data-refresh
         run: |
             # known_failures.toml now accepts the regressions, so anything still failing is a real bug
             julia --project=. -e 'using Pkg; Pkg.test()'
             base="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+            REFRESH_BRANCH="automatic/repology-data-refresh-${base//\//-}"
             git push --force origin HEAD:"$REFRESH_BRANCH"
             {
               echo "This Repology data refresh regressed corpus entries, so it was not pushed to \`$base\`. This PR records them in \`test/known_failures.toml\`; fix them in \`additional_info.toml\` (or accept them) before merging."

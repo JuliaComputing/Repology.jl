@@ -124,18 +124,21 @@ function parse_tag_version(tag)
     # Archives named after a commit (like 3a5f1c2.tar.gz) carry no version
     occursin(r"^[0-9a-f]{7,40}$", tag) && occursin(r"[a-f]", tag) && return nothing
     starts = [i for i in eachindex(tag) if isdigit(tag[i]) && (i == 1 || !(tag[prevind(tag, i)] in "0123456789."))]
-    # Never restart inside a standalone candidate that failed to parse (7.1.2-1 must not become 1), but do retry after
-    # one glued to a name (PCRE2-10.42)
-    skip_until = 0
+    # A restart inside a standalone candidate that failed to parse must have more components than that candidate's
+    # consistently-separated prefix: 7.1.2-1 must not become 1, but processing-1434-4.5.6 is 4.5.6. Candidates glued to
+    # a name (PCRE2-10.42) never block later ones.
+    skip_until, min_parts = 0, 0
     for s in starts
-        s <= skip_until && continue
-        if s == 1 || !isletter(tag[prevind(tag, s)])
+        inside = s <= skip_until
+        if !inside && (s == 1 || !isletter(tag[prevind(tag, s)]))
             skip_until = s + length(match(r"^[0-9A-Za-z._-]*", SubString(tag, s)).match) - 1
+            min_parts = count(r"\d+", match(r"^\d+(?:([._-])\d+(?:\1\d+)*)?", SubString(tag, s)).match)
         end
         m = match(r"^(\d+)(?:([._-])(\d+)(?:\2\d+)*)?(?:([._-]?)([A-Za-z]+)(\d*))?$", SubString(tag, s))
         isnothing(m) && continue
         numeric = m.captures[2] === nothing ? m.captures[1] :
             replace(match(r"^\d+(?:[._-]\d+)*", SubString(tag, s)).match, m.captures[2] => ".")
+        inside && count('.', numeric) + 1 <= min_parts && continue
         isnothing(m.captures[5]) && return numeric
         qualifier, n = lowercase(m.captures[5]), m.captures[6]
         occursin(RELEASE_QUALIFIERS, qualifier) && isempty(n) && return numeric

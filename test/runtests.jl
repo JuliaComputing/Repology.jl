@@ -39,6 +39,11 @@ end
         @test parse_tag_version(tag) == ver
     end
     @test parse_tag_version("nightly") === nothing
+    @test parse_tag_version("7.1.2-1") === nothing
+    @test parse_tag_version("3a5f1c2") === nothing
+    @test parse_tag_version("0123abc4567def") === nothing
+    @test Repology.is_git_commit("3564038")
+    @test !Repology.is_git_commit(repeat("a", 64))
     # Munged versions are never returned
     @test !Repology.is_plausible_version("expat", "8_3")
     @test !Repology.is_plausible_version("expat", "v2.8.3")
@@ -51,14 +56,16 @@ end
 # Git sources (with a commit) require network access and are only checked if REPOLOGY_TEST_NETWORK is set.
 @testset "corpus" begin
     corpus = TOML.parsefile(joinpath(@__DIR__, "corpus.toml"))["entry"]
-    known_failures = Set(e["url"] for e in get(TOML.parsefile(joinpath(@__DIR__, "known_failures.toml")), "failure", []))
+    known_failures = Set((e["url"], get(e, "hash", "")) for e in get(TOML.parsefile(joinpath(@__DIR__, "known_failures.toml")), "failure", []))
     network = !isempty(get(ENV, "REPOLOGY_TEST_NETWORK", ""))
+    # Set when refreshing data, so that newly-fixed known failures don't block the refresh (only regressions do)
+    allow_fixed = !isempty(get(ENV, "REPOLOGY_ALLOW_FIXED", ""))
     for e in corpus
         haskey(e, "hash") && !network && continue
         id = identify(e["url"]; commit=get(e, "hash", nothing), use_overrides=false)
         ok = id.version == e["version"] && (e["kind"] != "manual" || id.project == e["project"])
-        if e["url"] in known_failures
-            @test_broken ok
+        if (e["url"], get(e, "hash", "")) in known_failures
+            allow_fixed && ok ? (@test ok) : (@test_broken ok)
         else
             ok || @info "corpus mismatch" e id
             @test ok

@@ -121,7 +121,13 @@ function normalize_url(url)
 end
 
 const _GIT_CACHE = Dict{String,String}()
-function get_version_from_commit(repo, commit; git_cache=_GIT_CACHE, include_parent=true)
+"""
+    get_tag_from_commit(repo, commit; git_cache, include_parent=true)
+
+Clone `repo` (without blobs) and return the newline-separated tags that point at `commit` (or its first parent),
+or `nothing` if there are none.
+"""
+function get_tag_from_commit(repo, commit; git_cache=_GIT_CACHE, include_parent=true)
     try
         dir = get!(git_cache, repo) do
             tmp = mktempdir()
@@ -134,69 +140,37 @@ function get_version_from_commit(repo, commit; git_cache=_GIT_CACHE, include_par
                 if success(pipeline(`git tag --points-at $c`, stdout=buf, stderr=Base.devnull)) && position(buf) > 0
                     return String(take!(buf))
                 end
-                seekstart!(buf)
+                seekstart(buf)
                 if success(pipeline(`git fetch origin $c`, stdout=Base.devnull, stderr=Base.devnull)) &&
                     success(pipeline(`git tag --points-at $c`, stdout=buf, stderr=Base.devnull)) && position(buf) > 0
                     return String(take!(buf))
                 end
-                seekstart!(buf)
+                seekstart(buf)
             end
             return ""
         end
-        # It can be challenging to parse a version number out of a tag; some options here include: v1.2.3 and PCRE2-1.2.3
-        # This strips all non-numeric prefixes with up to one digit as long as the digit is not followed by a period.
-        # and ignore everything after a newline (multiple tags are newline separated, with the latest first)
-        ver = strip(split(chopprefix(tag, r"^[^\d]*(?:\d[^\d.]+)?"), "\n", limit=2)[1])
-        return isempty(ver) ? nothing : ver
-    catch _
+        return isempty(strip(tag)) ? nothing : strip(tag)
+    catch ex
+        @debug "failed to get tags for $commit in $repo" exception=ex
         return nothing
     end
 end
+
+include("identify.jl")
 
 """
     (project, version) = identify_upstream(url, hash)
 
 Given a URL and a hash, attempt to identify the upstream project and version using data from Repology.
 
-If no project is found, returns `(nothing, nothing)`, and it may return `(proj, nothing)` if no version info is available
+If no project is found, returns `(nothing, nothing)`, and it may return `(proj, nothing)` if no version info is available.
+This is a thin wrapper around [`identify`](@ref), which also reports the provenance of the identification.
 
 Note that for repositories, it will attempt to download the git repository for versioning/tag information.
 """
 function identify_upstream(url, hash)
-    # First look for this URL in downloads; those are only populated if the version
-    # number is in the URL, so it's highly unlikely to be a false-positive and actually
-    # be a repository URL if it matches a known download.
-    dls = download_data()
-    repos = repository_data()
-    # First look for exact or normalized matches directly
-    for u in (url, normalize_url(url))
-        haskey(dls, u) && return dls[u]
-        haskey(repos, u) && return (repos[u], get_version_from_commit(url, hash))
-    end
-
-    # Finally, we can look for download URLs with a similar version pattern as a known URL.
-    # this is surprisingly expensive as there are a lot of patterns, so we use a map of
-    # prefix and regex patterns to find the longest one that matches and then ensure
-    # we got something version-ish back
-    prefix_regex_map = download_prefix_regex_map()
-    for u in (url, normalize_url(url))
-        idx = min(MAX_PREFIX_LENGTH, prevind(u, lastindex(u), 2))
-        while idx > 5
-            idx = prevind(u, idx)
-            prefix = SubString(u, 1, idx)
-            rest = SubString(u, nextind(u, idx))
-            for (regex, proj) in get(prefix_regex_map, prefix, Pair{Regex,String}[])
-                m = match(regex, rest)
-                isnothing(m) && continue
-                ver = m.captures[1]
-                if length(ver) >= 3 && ver[1] in '0':'9' && !contains(ver, "/")
-                    return (proj, ver)
-                end
-            end
-        end
-    end
-
-    return (nothing, nothing)
+    id = identify(url; commit=hash)
+    return (id.project, id.version)
 end
 
 end

@@ -1,25 +1,5 @@
 # Corpus entries that Repology.identify currently gets wrong. Regenerate with scripts/known_failures.jl.
 [[failure]]
-expected = "cudss 0.7.0"
-got = "nothing nothing"
-url = "https://developer.download.nvidia.com/compute/cudss/redist/libcudss/linux-x86_64/libcudss-linux-x86_64-0.7.0.20_cuda12-archive.tar.xz"
-[[failure]]
-expected = "grass-gis 7.8.5"
-got = "nothing nothing"
-url = "https://grass.osgeo.org/grass78/source/grass-7.8.5.tar.gz"
-[[failure]]
-expected = "ghostscript 9.55.0"
-got = "nothing nothing"
-url = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs9550/ghostscript-9.55.0.tar.gz"
-[[failure]]
-expected = "htop 2.2.0"
-got = "nothing nothing"
-url = "http://hisham.hm/htop/releases/2.2.0/htop-2.2.0.tar.gz"
-[[failure]]
-expected = "imagemagick 6.9.10-12"
-got = "nothing nothing"
-url = "https://github.com/ImageMagick/ImageMagick6/archive/6.9.10-12.tar.gz"
-[[failure]]
 expected = "libgit2 0.28.2"
 got = "libgit2 nothing"
 url = "https://github.com/libgit2/libgit2.git"
@@ -28,129 +8,13 @@ expected = "mariadb-connector-c 3.1.6"
 got = "mariadb-connector-c nothing"
 url = "https://github.com/mariadb-corporation/mariadb-connector-c.git"
 [[failure]]
-expected = "opus 1.3.1"
-got = "nothing nothing"
-url = "https://archive.mozilla.org/pub/opus/opus-1.3.1.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.15.3"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.15.3/qdrant-aarch64-apple-darwin.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.15.3"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.15.3/qdrant-aarch64-unknown-linux-musl.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.15.3"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.15.3/qdrant-x86_64-apple-darwin.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.15.3"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.15.3/qdrant-x86_64-pc-windows-msvc.zip"
-[[failure]]
-expected = "rust:qdrant 1.15.3"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.15.3/qdrant-x86_64-unknown-linux-gnu.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.15.3"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.15.3/qdrant-x86_64-unknown-linux-musl.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.17.1"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.17.1/qdrant-aarch64-apple-darwin.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.17.1"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.17.1/qdrant-aarch64-unknown-linux-musl.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.17.1"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.17.1/qdrant-x86_64-apple-darwin.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.17.1"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.17.1/qdrant-x86_64-pc-windows-msvc.zip"
-[[failure]]
-expected = "rust:qdrant 1.17.1"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.17.1/qdrant-x86_64-unknown-linux-gnu.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.17.1"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.17.1/qdrant-x86_64-unknown-linux-musl.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.18.3"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.18.3/qdrant-aarch64-apple-darwin.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.18.3"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.18.3/qdrant-aarch64-unknown-linux-musl.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.18.3"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.18.3/qdrant-x86_64-apple-darwin.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.18.3"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.18.3/qdrant-x86_64-pc-windows-msvc.zip"
-[[failure]]
-expected = "rust:qdrant 1.18.3"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.18.3/qdrant-x86_64-unknown-linux-gnu.tar.gz"
-[[failure]]
-expected = "rust:qdrant 1.18.3"
-got = "nothing nothing"
-url = "https://github.com/qdrant/qdrant/releases/download/v1.18.3/qdrant-x86_64-unknown-linux-musl.tar.gz"
-[[failure]]
 expected = "sz3 3.1.7"
 got = "nothing nothing"
 url = "https://github.com/szcompressor/SZ3/releases/download/v3.1.7/SZ3-3.1.7.zip"
 [[failure]]
-expected = "sundials 3.1.1"
-got = "nothing nothing"
-url = "https://computation.llnl.gov/projects/sundials/download/sundials-3.1.1.tar.gz"
-[[failure]]
-expected = "wayland 1.17.0"
-got = "nothing nothing"
-url = "https://wayland.freedesktop.org/releases/wayland-1.17.0.tar.xz"
-[[failure]]
-expected = "wayland 1.19.0"
-got = "nothing nothing"
-url = "https://wayland.freedesktop.org/releases/wayland-1.19.0.tar.xz"
-[[failure]]
-expected = "libxslt 1.1.33"
-got = "nothing nothing"
-url = "ftp://xmlsoft.org/libxslt/libxslt-1.1.33.tar.gz"
-[[failure]]
-expected = "libxcb 1.17.0"
-got = "nothing nothing"
-url = "https://www.x.org/archive/individual/xcb/libxcb-1.17.0.tar.xz"
-[[failure]]
-expected = "util-macros 1.19.2"
-got = "nothing nothing"
-url = "https://www.x.org/archive/individual/util/util-macros-1.19.2.tar.bz2"
-[[failure]]
-expected = "util-macros 1.20.2"
-got = "nothing nothing"
-url = "https://www.x.org/archive/individual/util/util-macros-1.20.2.tar.xz"
-[[failure]]
-expected = "xcb-proto 1.17.0"
-got = "nothing nothing"
-url = "https://www.x.org/archive/individual/xcb/xcb-proto-1.17.0.tar.xz"
-[[failure]]
 expected = "zeromq 4.3.2"
 got = "zeromq nothing"
 url = "https://github.com/zeromq/libzmq.git"
-[[failure]]
-expected = "biome 2.0.6"
-got = "biome nothing"
-url = "https://github.com/biomejs/biome/archive/refs/tags/@biomejs/biome@2.0.6.tar.gz"
-[[failure]]
-expected = "eudev 3.2.9"
-got = "nothing nothing"
-url = "https://dev.gentoo.org/~blueness/eudev/eudev-3.2.9.tar.gz"
 [[failure]]
 expected = "libusb 1.0.23"
 got = "libusb nothing"
@@ -159,11 +23,3 @@ url = "https://github.com/libusb/libusb.git"
 expected = "sdsl-lite 2.1.1"
 got = "sdsl-lite nothing"
 url = "https://github.com/simongog/sdsl-lite.git"
-[[failure]]
-expected = "t8code 1.6.1"
-got = "nothing nothing"
-url = "https://github.com/DLR-AMR/t8code/releases/download/v1.6.1/t8-1.6.1.tar.gz"
-[[failure]]
-expected = "t8code 2.0.0"
-got = "nothing nothing"
-url = "https://github.com/DLR-AMR/t8code/releases/download/v2.0.0/t8-2.0.0.tar.gz"

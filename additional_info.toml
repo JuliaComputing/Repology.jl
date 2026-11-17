@@ -122,6 +122,8 @@ url_patterns = ["^\\Qhttps://github.com/JuliaStats/Rmath-julia/archive/v\\E(\\d.
 # 7.1.2-1 is a patch release after 7.1.2
 version_scheme = "libversion"
 url_patterns = ["^\\Qhttps://github.com/ImageMagick/ImageMagick6/archive/\\E(6\\.[^/]*)\\Q.tar.gz\\E$"]
+repositories = ["https://github.com/ImageMagick/ImageMagick", "https://github.com/ImageMagick/ImageMagick6"]
+tag_patterns = [{regex = "^(\\d+\\.\\d+\\.\\d+-\\d+)$"}]
 
 [openssh]
 # 9.2p1 is a patch release after 9.2
@@ -231,3 +233,56 @@ url_patterns = ["^\\Qhttps://github.com/biomejs/biome/archive/refs/tags/@biomejs
 
 [cudss]
 url_patterns = ["^\\Qhttps://developer.download.nvidia.com/compute/cudss/redist/libcudss/\\E[^/]+\\Q/libcudss-\\E[^/]+?-(\\d+\\.\\d+\\.\\d+\\.\\d+)_cuda"]
+
+# Git repositories and tag schemes that Repology's data doesn't (or no longer) cover
+[nccl]
+repositories = ["https://github.com/NVIDIA/nccl.git"]
+tag_patterns = [{regex = "^v(\\d+\\.\\d+\\.\\d+-\\d+)$"}]
+
+[minio]
+tag_patterns = [{regex = "^RELEASE\\.(\\d{4}-\\d\\d-\\d\\dT\\d\\d-\\d\\d-\\d\\dZ)$"}]
+
+["llama.cpp"]
+repositories = ["https://github.com/ggerganov/llama.cpp.git", "https://github.com/ggml-org/llama.cpp.git"]
+tag_patterns = [{regex = "^(b\\d+)$"}]
+
+[p7zip]
+repositories = ["https://github.com/p7zip-project/p7zip"]
+
+[uasm]
+repositories = ["https://github.com/Terraspace/UASM"]
+
+[onnx]
+repositories = ["https://github.com/onnx/onnx.git"]
+
+[libfabric]
+repositories = ["https://github.com/ofiwg/libfabric"]
+
+[zxing-cpp]
+repositories = ["https://github.com/zxing-cpp/zxing-cpp.git"]
+
+[liquid-dsp]
+repositories = ["https://github.com/jgaeddert/liquid-dsp.git"]
+
+[sdl2-ttf]
+repositories = ["https://github.com/libsdl-org/SDL_ttf.git"]
+tag_patterns = [{regex = "^(?:pre)?release-(2\\..+)$"}]
+
+[sdl3-ttf]
+repositories = ["https://github.com/libsdl-org/SDL_ttf.git"]
+tag_patterns = [{regex = "^(?:pre)?release-(3\\..+)$"}]
+
+["rust:regex"]
+repositories = ["https://github.com/rust-lang/regex.git"]
+
+[wayland-protocols]
+url_patterns = ["^\\Qhttps://wayland.freedesktop.org/releases/wayland-protocols-\\E(\\d[^/]*)\\Q.tar.\\E\\w+$"]
+
+[portaudio]
+url_patterns = ["^https?://(?:www\\.)?portaudio\\.com/archives/pa_stable_v\\d+_\\d+\\.tgz()$"] # Repology spells these 190600_20161030, which isn't comparable
+
+[cutensor]
+url_patterns = ["^\\Qhttps://developer.download.nvidia.com/compute/cutensor/redist/libcutensor/\\E[^/]+\\Q/libcutensor-\\E[^/]+?-(\\d+\\.\\d+\\.\\d+\\.\\d+)(?:_cuda\\d+)?-archive"]
+
+[crosstool-ng]
+url_patterns = ["^https?://crosstool-ng\\.org/download/crosstool-ng/crosstool-ng-(\\d[^/]*)\\.tar\\.\\w+$"]

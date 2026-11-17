@@ -50,6 +50,11 @@ end
     @test parse_tag_version("nightly") === nothing
     @test parse_tag_version("7.1.2-1") === nothing
     @test parse_tag_version("ImageMagick-7.1.1-47") === nothing
+    @test parse_tag_version("v2.30.7-1") === nothing
+    @test Repology.version_from_tag("nccl", "v2.30.7-1") == "2.30.7-1"
+    @test Repology.version_from_tag("imagemagick", "7.1.2-27") == "7.1.2-27"
+    @test Repology.version_from_tag("minio", "RELEASE.2025-07-23T15-54-02Z") == "2025-07-23T15-54-02Z"
+    @test Repology.version_from_tag("llama.cpp", "b7821") == "b7821"
     @test parse_tag_version("processing-1434-4.5.6") == "4.5.6"
     @test parse_tag_version("RELEASE.2025-09-07T16-13-09Z") === nothing
     @test parse_tag_version("release.1.2.3") == "1.2.3"
@@ -62,6 +67,9 @@ end
     @test !Repology.is_plausible_version("expat", "8_3")
     @test !Repology.is_plausible_version("expat", "v2.8.3")
     @test !Repology.is_plausible_version("expat", nothing)
+    @test Repology.is_plausible_version("llama.cpp", "b7821")
+    @test !Repology.is_plausible_version("expat", "b2.8.3")
+    @test Repology.is_plausible_version("crosstool-ng", "1.25.0_rc1")
 end
 
 # A corpus of known-good source => (project, version) mappings, harvested from GeneralMetadata.jl by

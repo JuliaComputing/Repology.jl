@@ -3,6 +3,9 @@ name: Export from Repology's DB dump
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   repology-export:
     runs-on: ubuntu-latest

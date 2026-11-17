@@ -57,8 +57,8 @@ end
 end
 
 # A corpus of known-good source => (project, version) mappings, harvested from GeneralMetadata.jl by
-# scripts/build_corpus.jl. "manual" entries were hand-corrected and must match exactly; "jll-version" entries
-# are those whose upstream version equalled the JLL version, so only the version is checked.
+# scripts/build_corpus.jl. "manual" entries were hand-corrected; "jll-version" entries are those whose upstream
+# version equalled the JLL version. Both must match project and version exactly.
 # Git sources (with a commit) require network access and are only checked if REPOLOGY_TEST_NETWORK is set.
 @testset "vercmp" begin
     using Repology: vercmp, version_scheme, version_features, VersionScheme, P_IS_PATCH
@@ -118,7 +118,7 @@ end
     for e in corpus
         haskey(e, "hash") && !network && continue
         id = identify(e["url"]; commit=get(e, "hash", nothing), use_overrides=false)
-        ok = id.version == e["version"] && (e["kind"] != "manual" || id.project == e["project"])
+        ok = id.version == e["version"] && id.project == e["project"]
         if (e["url"], get(e, "hash", "")) in known_failures
             allow_fixed && ok ? (@test ok) : (@test_broken ok)
         else

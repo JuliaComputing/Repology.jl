@@ -35,8 +35,15 @@ jobs:
 
       - name: Update package components
         id: update
+        env:
+          REPOLOGY_PROJECT_CHANGES: /tmp/project_changes.md
         run: |
           julia --project=. scripts/update_repology_info.jl
+          if [ -s /tmp/project_changes.md ]; then
+            echo "project_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "project_changes=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Check the corpus against the new data
         id: corpus
@@ -63,14 +70,14 @@ jobs:
               echo "committed=true" >> $GITHUB_OUTPUT
             fi
 
-      - name: Push to the current branch if the corpus passed
-        if: steps.git_commit.outputs.committed == 'true' && steps.corpus.outputs.passed == 'true'
+      - name: Push to the current branch if the corpus passed and no exported URL changed project
+        if: steps.git_commit.outputs.committed == 'true' && steps.corpus.outputs.passed == 'true' && steps.update.outputs.project_changes != 'true'
         run: |
             current_branch="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
             git push origin HEAD:"$current_branch"
 
       - name: Otherwise propose the refresh as a PR
-        if: steps.git_commit.outputs.committed == 'true' && steps.corpus.outputs.passed != 'true'
+        if: steps.git_commit.outputs.committed == 'true' && (steps.corpus.outputs.passed != 'true' || steps.update.outputs.project_changes == 'true')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -80,16 +87,30 @@ jobs:
             REFRESH_BRANCH="automatic/repology-data-refresh-${base//\//-}"
             git push --force origin HEAD:"$REFRESH_BRANCH"
             {
-              echo "This Repology data refresh regressed corpus entries, so it was not pushed to \`$base\`. This PR records them in \`test/known_failures.toml\`; before merging, either fix the regression in \`additional_info.toml\`, correct the entry in \`test/corpus.toml\` if the corpus was wrong and Repology is right, or accept it as a known failure."
-              echo
-              echo '```diff'
-              cat /tmp/known_failures.diff
-              echo '```'
+              echo "This Repology data refresh needs review, so it was not pushed to \`$base\`."
+              if [ -s /tmp/known_failures.diff ]; then
+                echo
+                echo "It regressed corpus entries, now recorded in \`test/known_failures.toml\`. Before merging, either fix the regression in \`additional_info.toml\`, correct the entry in \`test/corpus.toml\` if the corpus was wrong and Repology is right, or accept it as a known failure."
+                echo
+                echo '```diff'
+                cat /tmp/known_failures.diff
+                echo '```'
+              fi
+              if [ -s /tmp/project_changes.md ]; then
+                echo
+                echo "$(($(wc -l < /tmp/project_changes.md) - 2)) previously-exported URLs now map to a different project. Many are Repology renames; where a downstream package has claimed an upstream URL, add a \`url_patterns\` entry for the upstream project in \`additional_info.toml\`."
+                echo
+                echo "<details><summary>Project changes</summary>"
+                echo
+                head -n 302 /tmp/project_changes.md
+                echo
+                echo "</details>"
+              fi
               echo
               echo "From $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             } > /tmp/pr_body.md
             if [ -n "$(gh pr list --head "$REFRESH_BRANCH" --state open --json number --jq '.[].number')" ]; then
               gh pr edit "$REFRESH_BRANCH" --body-file /tmp/pr_body.md
             else
-              gh pr create --base "$base" --head "$REFRESH_BRANCH" --title "[automatic] Repology data refresh with corpus regressions" --body-file /tmp/pr_body.md
+              gh pr create --base "$base" --head "$REFRESH_BRANCH" --title "[automatic] Repology data refresh for review" --body-file /tmp/pr_body.md
             fi

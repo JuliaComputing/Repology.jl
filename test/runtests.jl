@@ -109,6 +109,18 @@ end
     @test !version_scheme("expat").curated
 end
 
+include("corpus_match.jl")
+@testset "corpus_match" begin
+    e = Dict("kind" => "jll-version", "project" => "xorriso", "version" => "1.5.6",
+        "url" => "https://www.gnu.org/software/xorriso/xorriso-1.5.6.pl02.tar.gz")
+    @test corpus_match(e, Identification("xorriso", "1.5.6.pl02", "repology-url"))
+    @test corpus_match(e, Identification("xorriso", "1.5.6", "repology-url"))
+    @test !corpus_match(e, Identification("xorriso", "1.5.61", "repology-url"))
+    @test !corpus_match(e, Identification("xorriso", "1.5.6.pl03", "repology-url"))
+    @test !corpus_match(e, Identification("xorriso", nothing, "repository"))
+    @test !corpus_match(merge(e, Dict("kind" => "manual")), Identification("xorriso", "1.5.6.pl02", "repology-url"))
+end
+
 @testset "corpus" begin
     corpus = TOML.parsefile(joinpath(@__DIR__, "corpus.toml"))["entry"]
     known_failures = Set((e["url"], get(e, "hash", "")) for e in get(TOML.parsefile(joinpath(@__DIR__, "known_failures.toml")), "failure", []))
@@ -118,7 +130,7 @@ end
     for e in corpus
         haskey(e, "hash") && !network && continue
         id = identify(e["url"]; commit=get(e, "hash", nothing), use_overrides=false)
-        ok = id.version == e["version"] && (e["kind"] != "manual" || id.project == e["project"])
+        ok = corpus_match(e, id)
         if (e["url"], get(e, "hash", "")) in known_failures
             allow_fixed && ok ? (@test ok) : (@test_broken ok)
         else

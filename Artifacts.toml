@@ -3,4 +3,4 @@ git-tree-sha1 = "33349945d5f48700b0b9941fd2674ee49a9dab8c"
 
     [[repology_data.download]]
     sha256 = "58736285a3784828a8e2312263cac55c47de02a072d3a4e896ed6918b66e366d"
-    url = "https://github.com/mbauman/Repology.jl/releases/download/data-2026-11-18/repology_data-58736285a3784828a8e2312263cac55c47de02a072d3a4e896ed6918b66e366d.tar.gz"
+    url = "https://github.com/JuliaPackaging/Repology.jl/releases/download/data-2026-11-18/repology_data-58736285a3784828a8e2312263cac55c47de02a072d3a4e896ed6918b66e366d.tar.gz"

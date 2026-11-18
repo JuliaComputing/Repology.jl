@@ -13,4 +13,4 @@ makedocs(;
     ],
 )
 
-deploydocs(; repo="github.com/mbauman/Repology.jl.git", devbranch="main")
+deploydocs(; repo="github.com/JuliaPackaging/Repology.jl.git", devbranch="main")

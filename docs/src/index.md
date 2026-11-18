@@ -13,7 +13,7 @@ the provenance of each answer. See the [Guide](@ref) for the motivation and deta
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/mbauman/Repology.jl")
+Pkg.add(url="https://github.com/JuliaPackaging/Repology.jl")
 ```
 
 ## Quick start

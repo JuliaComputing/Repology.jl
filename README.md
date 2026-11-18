@@ -1,7 +1,7 @@
 # Repology.jl
 
 [![Documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://mbauman.github.io/Repology.jl/dev/)
-[![CI](https://github.com/mbauman/Repology.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/mbauman/Repology.jl/actions/workflows/CI.yml)
+[![CI](https://github.com/JuliaPackaging/Repology.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/JuliaPackaging/Repology.jl/actions/workflows/CI.yml)
 
 Connect arbitrary source URLs to canonically-named upstream projects.
 
@@ -19,7 +19,7 @@ records how each answer was found.
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/mbauman/Repology.jl")
+Pkg.add(url="https://github.com/JuliaPackaging/Repology.jl")
 ```
 
 ## Usage

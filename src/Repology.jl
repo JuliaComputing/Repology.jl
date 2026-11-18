@@ -2,11 +2,27 @@ module Repology
 
 using TOML: TOML
 using DataStructures: OrderedDict
+using Artifacts: artifact_hash, artifact_path
+
+"""
+    data_dir()
+
+The directory with the data exported from Repology's database dump (`repositories.toml`, `downloads.toml` and
+`cpes.toml`). It's the `repology_data` artifact, or the `REPOLOGY_DATA` environment variable if set (used when
+testing a refresh before it's published). Until the first artifact is published, it's the `data` directory of this
+repository.
+"""
+function data_dir()
+    isempty(get(ENV, "REPOLOGY_DATA", "")) || return ENV["REPOLOGY_DATA"]
+    hash = artifact_hash("repology_data", joinpath(@__DIR__, "..", "Artifacts.toml"))
+    isnothing(hash) && return joinpath(@__DIR__, "..", "data")
+    return artifact_path(hash)
+end
 
 const REPOSITORY_DATA = Ref{Dict{String,String}}()
 function repository_data()
     isassigned(REPOSITORY_DATA) && return REPOSITORY_DATA[]
-    data = TOML.parsefile(joinpath(@__DIR__, "..", "data", "repositories.toml"))
+    data = TOML.parsefile(joinpath(data_dir(), "repositories.toml"))
     for (k,v) in data
         # also store normalized URLs directly for matching
         data[normalize_url(k)] = v
@@ -17,18 +33,30 @@ const DOWNLOAD_DATA = Ref{Dict{String,Tuple{String,String}}}()
 function download_data()
     isassigned(DOWNLOAD_DATA) && return DOWNLOAD_DATA[]
     data = Dict{String,Tuple{String,String}}()
-    for (k,v) in TOML.parsefile(joinpath(@__DIR__, "..", "data", "downloads.toml"))
+    for (k,v) in TOML.parsefile(joinpath(data_dir(), "downloads.toml"))
         data[k] = (v[1], v[2])
         data[normalize_url(k)] = (v[1], v[2])
     end
     return DOWNLOAD_DATA[] = data
 end
+# Count how many known downloads support each project for a given prefix/regex pair
+vote!(map, prefix, pattern, project) =
+    (votes = get!(Dict{String,Int}, get!(Dict{String,Dict{String,Int}}, map, prefix), pattern);
+     votes[project] = get(votes, project, 0) + 1)
+
+# Different projects sharing a prefix/regex pair are usually a bad alias in a single repository (like rsync3 for
+# rsync); use the pattern only when one project has at least twice the support of all others combined.
+function pattern_winner(votes)
+    best = argmax(p -> (votes[p], p), keys(votes))
+    return 2 * (sum(values(votes)) - votes[best]) <= votes[best] ? best : nothing
+end
+
 const DOWNLOAD_PREFIX_REGEX_MAP = Ref{Dict{String,Vector{Pair{Regex,String}}}}()
 const MAX_PREFIX_LENGTH = 120
 function download_prefix_regex_map()
     isassigned(DOWNLOAD_PREFIX_REGEX_MAP) && return DOWNLOAD_PREFIX_REGEX_MAP[]
-    map = Dict{String,OrderedDict{String,String}}()
-    for (k,v) in download_data()
+    map = Dict{String,Dict{String,Dict{String,Int}}}()
+    for (k,v) in sort!(collect(download_data()), by=first)
         version = chopprefix(v[2], "v") # drop an optional v prefix
         length(version) >= 3 || continue # ensure non-trivial version numbers
         version[1] in '0':'9' || continue # ensure version starts with a digit
@@ -46,14 +74,7 @@ function download_prefix_regex_map()
         vpat = replace(replace(rest, version => "\\E(.*?)\\Q"; count=1), version => "\\E\\1\\Q")
         pattern = string("^\\Q", vpat, "\\E\$")
 
-        suffix_map = get!(map, prefix, OrderedDict{String,String}())
-        if haskey(suffix_map, pattern) && suffix_map[pattern] != v[1]
-            # If we have multiple projects with the same prefix/regex pair, we can't use it for matching
-            # These are often just bad aliases in the data
-            suffix_map[pattern] = ""
-        else
-            suffix_map[pattern] = v[1]
-        end
+        vote!(map, prefix, pattern, v[1])
 
         # Now, secondarily, if a non-trivial prefix of the version number appears in the prefix, we also support that.
         munged_version = version
@@ -65,32 +86,25 @@ function download_prefix_regex_map()
                 vpat = replace(vpat, munged_version => "\\E.{$(length(munged_version))}\\Q") # just do a fixed-width wildcard
                 pattern = string("^\\Q", vpat, "\\E\$")
 
-                suffix_map = get!(map, prefix, OrderedDict{String,String}())
-                if haskey(suffix_map, pattern) && suffix_map[pattern] != v[1]
-                    # If we have multiple projects with the same prefix/regex pair, we can't use it for matching
-                    # These are often just bad aliases in the data
-                    suffix_map[pattern] = ""
-                else
-                    suffix_map[pattern] = v[1]
-                end
+                vote!(map, prefix, pattern, v[1])
                 break
             end
         end
     end
-    for (_,suffixmap) in map
-        # Now remove the "" sentinels we set for ambiguous cases
-        filter!(((k,v),)->v != "", suffixmap)
-        # And sort the suffixes by length so we always match the longest one first
-        sort!(suffixmap, by=length, rev=true)
+    regex_map = Dict{String, Vector{Pair{Regex,String}}}()
+    for (prefix, patterns) in map
+        # Sort the suffixes by length so we always match the longest one first
+        regex_map[prefix] = Pair{Regex,String}[Regex(p) => project
+            for (p, votes) in sort!(collect(patterns), by=((p, _),)->(-length(p), p))
+            for project in (pattern_winner(votes),) if !isnothing(project)]
     end
-    # And, finally, compile all the regexes, preserving their ordering for longest (plaintext) match first
-    return DOWNLOAD_PREFIX_REGEX_MAP[] = Dict{String, Vector{Pair{Regex,String}}}(k => Pair{Regex,String}[(Regex(p) => v) for (p,v) in suffixmap] for (k,suffixmap) in map)
+    return DOWNLOAD_PREFIX_REGEX_MAP[] = regex_map
 end
 
 const CPE_DATA = Ref{Dict{String,Any}}()
 function cpe_data()
     isassigned(CPE_DATA) && return CPE_DATA[]
-    return CPE_DATA[] = TOML.parsefile(joinpath(@__DIR__, "..", "data", "cpes.toml"))
+    return CPE_DATA[] = TOML.parsefile(joinpath(data_dir(), "cpes.toml"))
 end
 
 """

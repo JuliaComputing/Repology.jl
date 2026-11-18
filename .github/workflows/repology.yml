@@ -6,21 +6,17 @@ on:
 jobs:
   repology-export:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # to create the data release and push Artifacts.toml
+    defaults:
+      run:
+        shell: bash # -eo pipefail
     env:
-      POSTGRESQL: 17
+      REPOLOGY_DATA_OUT: ${{ runner.temp }}/repology_data
 
     steps:
-      - name: Maximize build disk space
-        uses: easimon/maximize-build-space@v10
-        with:
-          remove-dotnet: true
-          remove-android: true
-          remove-haskell: true
-          remove-codeql: true
-          remove-docker-images: true
-
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -32,60 +28,62 @@ jobs:
             git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Setup Julia
-        uses: julia-actions/setup-julia@v1
+        uses: julia-actions/setup-julia@ac0d62164df5a47de404f4e96ce86a1a28a28d56 # v1
 
       - name: Install Julia dependencies
         run: |
             julia --project=. -e 'using Pkg; Pkg.instantiate()'
-
-      - name: Install repology/postgres dependencies
-        run: |
-          curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main $POSTGRESQL" > /etc/apt/sources.list.d/pgdg.list'
-          sudo apt-get update
-          sudo apt-get install postgresql-$POSTGRESQL postgresql-server-dev-$POSTGRESQL
-      - name: Install libversion
-        run: |
-          mkdir _libversion
-          cd _libversion
-          wget -qO- https://github.com/repology/libversion/archive/master.tar.gz | tar -xzf- --strip-components 1
-          cmake .
-          make
-          sudo make install
-          sudo ldconfig
-      - name: Install postgresql-libversion
-        run: |
-          mkdir _postgresql-libversion
-          cd _postgresql-libversion
-          wget -qO- https://github.com/repology/postgresql-libversion/archive/master.tar.gz | tar -xzf- --strip-components 1
-          make
-          sudo make install
-      - name: Setup database # TODO: Maybe user a proper GitHub action service?
-        run: |
-          sudo pg_createcluster $POSTGRESQL main --start
-          sudo -u postgres psql -p 5433 -c "CREATE DATABASE repology"
-          sudo -u postgres psql -p 5433 -c "CREATE USER repology WITH PASSWORD 'repology'"
-          sudo -u postgres psql -p 5433 -c "GRANT ALL ON DATABASE repology TO repology"
-          sudo -u postgres psql -p 5433 -c "GRANT pg_write_server_files TO repology"
-          sudo -u postgres psql -p 5433 --dbname repology -c "GRANT CREATE ON SCHEMA public TO PUBLIC"
-          sudo -u postgres psql -p 5433 --dbname repology -c "CREATE EXTENSION pg_trgm"
-          sudo -u postgres psql -p 5433 --dbname repology -c "CREATE EXTENSION libversion"
 
       - name: Update package components
         id: update
         run: |
           julia --project=. scripts/update_repology_info.jl
 
+      - name: Test the new data
+        env:
+          REPOLOGY_DATA: ${{ runner.temp }}/repology_data
+        run: |
+          julia --project=. -e 'using Pkg; Pkg.test()'
+
+      - name: Publish the new data as a dated release and bind it in Artifacts.toml (if it changed)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+            set -u
+            tag="data-$(date -u +%F)"
+            # A second refresh on the same day gets its own release too
+            if gh release view "$tag" > /dev/null 2>&1; then
+              tag="$tag-$GITHUB_RUN_ID"
+            fi
+            tarball=$(julia --project=. scripts/publish_data.jl "$RUNNER_TEMP/repology_data" "$RUNNER_TEMP/tarballs" \
+              "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$tag")
+            if [ -z "$tarball" ]; then
+              echo "The data didn't change."
+              exit 0
+            fi
+            if ! gh release view "$tag" > /dev/null 2>&1; then
+              notes="$RUNNER_TEMP/release_notes.md"
+              cat > "$notes" <<'EOF'
+            The `repology_data` artifact exported from Repology's database dump. Artifacts.toml refers to it by URL and hash, so never delete or replace it while any version of Repology.jl uses it.
+            EOF
+              printf '\nExported by %s/%s/actions/runs/%s\n' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" >> "$notes"
+              gh release create "$tag" --latest=false --title "Repology $tag" --notes-file "$notes"
+            fi
+            assets=$(gh release view "$tag" --json assets --jq '.assets[].name')
+            if ! grep -qxF -- "$(basename -- "$tarball")" <<< "$assets"; then
+              gh release upload "$tag" "$tarball"
+            fi
+
       - name: Commit changes (if any)
         id: git_commit
         run: |
-            git add repology_info.toml
+            git add Artifacts.toml
             if git diff --cached --quiet; then
-            echo "No changes to commit."
-            echo "committed=false" >> $GITHUB_OUTPUT
+              echo "No changes to commit."
+              echo "committed=false" >> "$GITHUB_OUTPUT"
             else
-            git commit -m "[automatic] update repology_info.toml"
-            echo "committed=true" >> $GITHUB_OUTPUT
+              git commit -m "[automatic] update the repology_data artifact"
+              echo "committed=true" >> "$GITHUB_OUTPUT"
             fi
 
       - name: Push directly to branch or main if exact

@@ -11,8 +11,6 @@ jobs:
     defaults:
       run:
         shell: bash # -eo pipefail
-    env:
-      REPOLOGY_DATA_OUT: ${{ runner.temp }}/repology_data
 
     steps:
       - name: Checkout source
@@ -36,6 +34,8 @@ jobs:
 
       - name: Update package components
         id: update
+        env:
+          REPOLOGY_DATA_OUT: ${{ runner.temp }}/repology_data
         run: |
           julia --project=. scripts/update_repology_info.jl
 

@@ -1,7 +1,7 @@
 # Repology.jl
 
 [![Documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://mbauman.github.io/Repology.jl/dev/)
-[![CI](https://github.com/JuliaComputing/Repology.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/JuliaComputing/Repology.jl/actions/workflows/CI.yml)
+[![CI](https://github.com/mbauman/Repology.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/mbauman/Repology.jl/actions/workflows/CI.yml)
 
 Identify upstream projects and versions from source URLs using
 [Repology](https://repology.org) data and curated metadata. Results include

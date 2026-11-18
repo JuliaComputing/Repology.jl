@@ -6,8 +6,11 @@ on:
 jobs:
   repology-export:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # to create the data release and push Artifacts.toml
     env:
       POSTGRESQL: 17
+      REPOLOGY_DATA_OUT: ${{ runner.temp }}/repology_data
 
     steps:
       - name: Maximize build disk space
@@ -76,15 +79,38 @@ jobs:
         run: |
           julia --project=. scripts/update_repology_info.jl
 
+      - name: Test the new data
+        env:
+          REPOLOGY_DATA: ${{ runner.temp }}/repology_data
+        run: |
+          julia --project=. -e 'using Pkg; Pkg.test()'
+
+      - name: Publish the new data as a dated release and bind it in Artifacts.toml (if it changed)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+            tag="data-$(date -u +%F)"
+            # A second refresh on the same day gets its own release too
+            gh release view "$tag" > /dev/null 2>&1 && tag="$tag-$GITHUB_RUN_ID"
+            tarball=$(julia --project=. scripts/publish_data.jl "$RUNNER_TEMP/repology_data" "$RUNNER_TEMP/tarballs" \
+              "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$tag")
+            if [ -n "$tarball" ]; then
+              gh release view "$tag" > /dev/null 2>&1 ||
+                gh release create "$tag" --latest=false --title "Repology data ${tag#data-}" \
+                  --notes "The \`repology_data\` artifact exported from Repology's database dump by $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID. Artifacts.toml refers to it by URL and hash, so never delete or replace the asset while any version of Repology.jl uses it."
+              gh release view "$tag" --json assets --jq '.assets[].name' | grep -qxF "$(basename "$tarball")" ||
+                gh release upload "$tag" "$tarball"
+            fi
+
       - name: Commit changes (if any)
         id: git_commit
         run: |
-            git add repology_info.toml
+            git add Artifacts.toml
             if git diff --cached --quiet; then
             echo "No changes to commit."
             echo "committed=false" >> $GITHUB_OUTPUT
             else
-            git commit -m "[automatic] update repology_info.toml"
+            git commit -m "[automatic] update the repology_data artifact"
             echo "committed=true" >> $GITHUB_OUTPUT
             fi
 

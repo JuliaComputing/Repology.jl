@@ -1,34 +1,69 @@
 # Guide
 
-## Identification and provenance
+## Why Repology.jl?
 
-[`Repology.identify`](@ref) returns an [`Repology.Identification`](@ref) with
-`project`, `version`, and `provenance` fields. Either project or version can be
-`nothing`; an unknown URL returns all three fields as `nothing`. The result can
-also be destructured into `(project, version)` (provenance is not iterated).
+Build recipes (like Julia's JLLs from Yggdrasil) download source code from
+arbitrary URLs: release tarballs on project websites, mirrors, GitHub archives,
+or a git repository at some commit. Nothing in those URLs says *which* upstream
+project they are, or what release. Asking "is this JLL affected by CVE-XXXX?" or
+"how far behind upstream is this package?" first requires answering that
+question for every source.
+
+[Repology](https://repology.org) already tracks thousands of projects across
+hundreds of package repositories under a single canonical name per project
+(`expat`, `openssl`, `libpng`, …), along with the download URLs, repositories,
+and CPEs that distributions use for them. Repology.jl uses that data to connect
+an arbitrary source URL (and optional commit) to a canonically-named Repology
+project and an upstream version:
 
 ```julia
-id = Repology.identify("https://github.com/owner/repo.git"; commit="0123456789abcdef")
-project, version = id
+julia> Repology.identify("https://github.com/libexpat/libexpat/releases/download/R_2_8_3/expat-2.8.3.tar.xz")
+Repology.Identification("expat", "2.8.3", "url-pattern")
 ```
 
-Only 7–40 character lowercase hexadecimal commit identifiers are used. Commit
-identification can list remote tags and clone a repository, falling back to tags
-on the first parent. Network failures in tag lookup yield no tags rather than a
-version. A known repository can still produce a project without a version.
+Once a source has a Repology project name, everything else Repology knows about
+that project (its versions, its CPE for matching security advisories, what other
+distributions ship) becomes reachable. Repology's data alone isn't enough to do
+this reliably, so the package layers hand-curated metadata on top
+(`additional_info.toml`) and records *how* each answer was found
+(its `provenance`), so downstream consumers can decide how much to trust it.
 
-[`Repology.PROVENANCES`](@ref) lists the identification strategies: hand-verified
-source overrides, curated URL patterns, exact/normalized download matches,
-forge URL tag parsing, commit tag lookup, repository matching, and inferred
-download-URL shapes. The provenance describes the version's source when a version
-is found, otherwise the project's source. In the known-repository path, a
-compatible heuristic version is preferred over a project-only repository result.
-Versions must pass [`Repology.is_plausible_version`](@ref); identification is not
-proof that the source is authentic or that a version exists upstream.
+The rest of this guide covers how identification works, how to curate it when it
+gets something wrong, and how the underlying data is refreshed.
 
-`use_overrides=false` disables only the hand-verified `sources` overrides, not
-the other curated metadata. [`Repology.identify_upstream`](@ref) is the older
-two-value wrapper without provenance.
+## How identification works
+
+[`Repology.identify`](@ref) takes a URL (and, for git sources, a `commit`) and
+tries a series of strategies, from most to least trustworthy. The first one that
+succeeds determines the result's `provenance` (see [`Repology.PROVENANCES`](@ref)):
+
+1. `"override"`: the URL (and commit) is a hand-verified source in `additional_info.toml`.
+2. `"url-pattern"`: the URL matches a curated regular expression for a project.
+3. `"repology-url"`: the URL (exactly, or after normalization) is a download URL
+   that some distribution has packaged for this project.
+4. `"tag-scheme"`: the URL is a GitHub/GitLab release or tag archive of a known
+   repository, and the tag parses as a version.
+5. `"git-tag"`: the URL is a known repository and the commit is tagged (or its
+   first parent is). This may list remote tags and clone the repository.
+6. `"repository"`: the repository is known, but no version could be found.
+7. `"heuristic"`: the URL has the same shape as a known download URL, with a
+   different version number in it.
+
+```julia
+julia> Repology.identify("https://github.com/madler/zlib.git"; commit="51b7f2abdade71cd9bb0e7a373ef2610ec6f9daf")
+Repology.Identification("zlib", "1.3.1", "git-tag")
+```
+
+The result is an [`Repology.Identification`](@ref). Either `project` or `version`
+may be `nothing`: an unknown URL gives all `nothing`s, and a known project can lack
+a version. It destructures as `project, version = id`. Every version must pass
+[`Repology.is_plausible_version`](@ref) (it looks like a version and fits the
+versions Repology knows for that project), but an identification is evidence,
+not proof that upstream released that version.
+
+`use_overrides=false` skips the hand-verified `sources` (useful for checking that
+the automatic strategies agree with them). [`Repology.identify_upstream`](@ref)
+is the older two-value wrapper without provenance.
 
 ## Version comparison
 

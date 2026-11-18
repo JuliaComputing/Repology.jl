@@ -1,12 +1,13 @@
 # Repology.jl
 
-Repology.jl identifies upstream projects and versions from source URLs using
-[Repology](https://repology.org) data and hand-curated metadata. It can also compare
-upstream version strings using Repology's libversion comparator or a project's
-curated version scheme.
+Repology.jl connects arbitrary source URLs, like the tarballs and git commits
+that build recipes download, to canonically-named upstream projects and versions
+from [Repology](https://repology.org). With a canonical project name, a source can
+be matched against security advisories (via CPEs), compared against the latest
+upstream release, and related to what other distributions ship.
 
-The package reads a versioned data artifact, not a live Repology API. Identifying
-a repository commit may contact the upstream Git server.
+It combines a snapshot of Repology's data with hand-curated metadata, and records
+the provenance of each answer. See the [Guide](@ref) for the motivation and details.
 
 ## Installation
 

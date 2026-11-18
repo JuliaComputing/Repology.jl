@@ -3,10 +3,17 @@
 [![Documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://mbauman.github.io/Repology.jl/dev/)
 [![CI](https://github.com/mbauman/Repology.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/mbauman/Repology.jl/actions/workflows/CI.yml)
 
-Identify upstream projects and versions from source URLs using
-[Repology](https://repology.org) data and curated metadata. Results include
-provenance; version comparison supports libversion and project-specific schemes.
-The package uses a versioned data snapshot, not a live Repology API.
+Connect arbitrary source URLs to canonically-named upstream projects.
+
+Build recipes (like Julia's JLLs) download sources from all over: project
+websites, mirrors, GitHub archives, git commits. Nothing in those URLs says which
+upstream project or release they are, yet that's the first thing you need to match
+a package against security advisories or check whether it's out of date.
+[Repology](https://repology.org) already gives thousands of projects a single
+canonical name and tracks the URLs, repositories and CPEs distributions use for
+them. Repology.jl uses a snapshot of that data, plus hand-curated metadata, to map
+a source URL (and optional commit) to a Repology project and upstream version, and
+records how each answer was found.
 
 ## Installation
 

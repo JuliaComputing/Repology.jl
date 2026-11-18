@@ -1,6 +1,6 @@
 # Repology.jl
 
-[![Documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://mbauman.github.io/Repology.jl/dev/)
+[![Documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliapackaging.github.io/Repology.jl/dev/)
 [![CI](https://github.com/JuliaPackaging/Repology.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/JuliaPackaging/Repology.jl/actions/workflows/CI.yml)
 
 Connect arbitrary source URLs to canonically-named upstream projects.
@@ -34,7 +34,7 @@ id = Repology.identify("https://github.com/libexpat/libexpat/releases/download/R
 Names are qualified (the module exports none). An unknown URL returns an
 identification with `nothing` fields; a known project can lack a version. Pass
 `commit=` for repository sources; tag lookup may access the network and clone
-the repository. See the [guide and API reference](https://mbauman.github.io/Repology.jl/dev/).
+the repository. See the [guide and API reference](https://juliapackaging.github.io/Repology.jl/dev/).
 
 ## Curation and data refresh
 
@@ -54,4 +54,4 @@ new dump. It tests the corpus and packages/uploads changed data with
 for repeat refreshes). Clean refreshes push the artifact binding; regressions or
 changed project mappings produce a review PR. Never delete or replace a data
 release referenced by any package version. The
-[guide](https://mbauman.github.io/Repology.jl/dev/guide/) covers local refreshes and curation.
+[guide](https://juliapackaging.github.io/Repology.jl/dev/guide/) covers local refreshes and curation.

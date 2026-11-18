@@ -5,7 +5,7 @@ makedocs(;
     modules=[Repology],
     sitename="Repology.jl",
     checkdocs=:all,
-    format=Documenter.HTML(; canonical="https://mbauman.github.io/Repology.jl/stable/"),
+    format=Documenter.HTML(; canonical="https://juliapackaging.github.io/Repology.jl/stable/"),
     pages=[
         "Home" => "index.md",
         "Guide" => "guide.md",

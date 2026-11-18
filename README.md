@@ -13,5 +13,3 @@ tarball named by its sha256 and bound in `Artifacts.toml`. `Repology.data_dir()`
 The "Export from Repology's DB dump" workflow writes a refresh with `scripts/update_repology_info.jl`, tests it,
 uploads it with `scripts/publish_data.jl`, and pushes the `Artifacts.toml` change. Never delete or replace a data
 release that any version of the package still points at.
-
-Until the first artifact is published, `Repology.data_dir()` falls back to the `data` directory committed here.

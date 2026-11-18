@@ -9,13 +9,12 @@ using Artifacts: artifact_hash, artifact_path
 
 The directory with the data exported from Repology's database dump (`repositories.toml`, `downloads.toml` and
 `cpes.toml`). It's the `repology_data` artifact, or the `REPOLOGY_DATA` environment variable if set (used when
-testing a refresh before it's published). Until the first artifact is published, it's the `data` directory of this
-repository.
+testing a refresh before it's published).
 """
 function data_dir()
     isempty(get(ENV, "REPOLOGY_DATA", "")) || return ENV["REPOLOGY_DATA"]
     hash = artifact_hash("repology_data", joinpath(@__DIR__, "..", "Artifacts.toml"))
-    isnothing(hash) && return joinpath(@__DIR__, "..", "data")
+    isnothing(hash) && error("artifact is missing")
     return artifact_path(hash)
 end
 

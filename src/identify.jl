@@ -88,6 +88,8 @@ versions, so older versions are not rejected.
 """
 function is_plausible_version(project, version)
     isnothing(version) && return false
+    # Commit hashes (gdk-pixbuf's archive/3c77404…) aren't orderable versions, even where Repology lists them
+    occursin(r"^[0-9a-f]{7,40}$", version) && occursin(r"[a-f]", version) && return false
     known = get(known_versions(), something(project, ""), Set{String}())
     version in known && occursin(r"\d", version) && return true # not placeholders like vim's "git"
     # A letter prefix is fine if the project's known versions share it (llama.cpp's b7821)

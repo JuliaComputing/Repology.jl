@@ -131,7 +131,7 @@ function main(dump=DUMP_URL)
     downloads, repositories = gather_links(df)
     cpes = gather_cpes(pkg_cpes, manual_cpes)
 
-    data = get(ENV, "REPOLOGY_DATA_OUT", joinpath(@__DIR__, "..", "data"))
+    data = ENV["REPOLOGY_DATA_OUT"]
     mkpath(data)
 
     # Each dump only has the packages that distributions currently ship, so download URLs for older releases (and

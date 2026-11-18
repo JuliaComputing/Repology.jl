@@ -1,7 +1,7 @@
 # Package a refreshed data directory as the `repology_data` artifact and bind it in Artifacts.toml.
 #   julia --project=. scripts/publish_data.jl DATA_DIR TARBALL_DIR DOWNLOAD_URL_PREFIX
 # Writes the tarball to TARBALL_DIR/repology_data-<sha256>.tar.gz, which must then be uploaded to
-# DOWNLOAD_URL_PREFIX. Does nothing if the data didn't change. Prints the tarball path, or nothing.
+# DOWNLOAD_URL_PREFIX (a data-YYYY-MM-DD release). Does nothing if the data didn't change. Prints the tarball path, or nothing.
 using Pkg.Artifacts: create_artifact, artifact_hash, archive_artifact, bind_artifact!
 using SHA: sha256
 

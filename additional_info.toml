@@ -1,4 +1,14 @@
 # Extra information for packages that are in repology, but haven't used the sources we used (or were otherwise skipped from the dump extract)
+#
+# Per project, all optional:
+#   url_patterns   = regexes matching source URLs; the first capture group is the version. These take precedence
+#                    over Repology's own URL data.
+#   repositories   = source repository URLs
+#   tag_patterns   = regexes extracting the version from a git tag
+#   cpes           = CPE prefixes
+#   version_scheme / version_flags = how versions compare; see `Repology.version_scheme`
+#   sources        = hand-verified one-off sources that no pattern covers, e.g. an untagged commit; checked first:
+#                    sources = [{url = "https://github.com/owner/repo.git", commit = "0123abc...", version = "1.2.3"}]
 
 [ampl-asl]
 url_patterns = ["^\\Qhttp://netlib.org/ampl/solvers.tgz\\E()$"] # No versioning info available
@@ -16,10 +26,10 @@ url_patterns = ["^\\Qhttp://fftw.org/~stevenj/fftw-\\E(\\d.*)\\Q.tar.gz\\E$"]
 repositories = ["https://github.com/sciapp/gr.git"]
 
 [git]
-url_patterns = ["^\\Qhttps://github.com/git-for-windows/git/releases/download/v\\E(\\d.*)\\Q.windows.1/Git-\\E\\1\\Q-64-bit.tar.bz2\\E$"]
+url_patterns = ["^\\Qhttps://github.com/git-for-windows/git/releases/download/v\\E(\\d.*)\\Q.windows.1/Git-\\E\\1-(?:32|64)\\Q-bit.tar.bz2\\E$"]
 
 [git-for-windows]
-url_patterns = ["^\\Qhttps://github.com/git-for-windows/git/releases/download/v\\E(\\d.*)\\Q/Git-\\E.+\\Q-64-bit.tar.bz2\\E$"]
+url_patterns = ["^\\Qhttps://github.com/git-for-windows/git/releases/download/v\\E(\\d.*)\\Q/Git-\\E.+-(?:32|64)\\Q-bit.tar.bz2\\E$"]
 
 [glib]
 url_patterns = ["^\\Qhttps://ftp.gnome.org/pub/gnome/sources/glib/\\E[^/]+\\Q/glib-\\E(\\d.*)\\Q.tar.xz\\E$"]
@@ -51,6 +61,10 @@ url_patterns = ["^\\Qhttps://github.com/llvm/llvm-project/releases/download/llvm
 
 [mbedtls]
 repositories = ["https://github.com/ARMmbed/mbedtls.git"]
+
+[msgpack-c]
+# Repology splits these release tarballs between msgpack and msgpack-c
+url_patterns = ["^\\Qhttps://github.com/msgpack/msgpack-c/releases/download/c-\\E(\\d[^/]*)\\Q/msgpack-c-\\E\\1\\Q.tar.gz\\E$"]
 
 [openspecfun]
 repositories = ["https://github.com/JuliaMath/openspecfun.git"]
@@ -104,3 +118,180 @@ url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\
 repositories = ["https://github.com/JuliaStats/Rmath-julia.git"]
 url_patterns = ["^\\Qhttps://github.com/JuliaStats/Rmath-julia/archive/v\\E(\\d.*)\\Q.tar.gz\\E$"]
 
+[imagemagick]
+# 7.1.2-1 is a patch release after 7.1.2
+version_scheme = "libversion"
+url_patterns = ["^\\Qhttps://github.com/ImageMagick/ImageMagick6/archive/\\E(6\\.[^/]*)\\Q.tar.gz\\E$"]
+repositories = ["https://github.com/ImageMagick/ImageMagick", "https://github.com/ImageMagick/ImageMagick6"]
+tag_patterns = [{regex = "^(\\d+\\.\\d+\\.\\d+-\\d+)$"}]
+
+[openssh]
+# 9.2p1 is a patch release after 9.2
+version_flags = ["P_IS_PATCH"]
+
+[giflib]
+url_patterns = ["^\\Qhttps://sourceforge.net/projects/giflib/files/giflib-\\E[^/]+\\Q/giflib-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
+
+[ncurses]
+# GNU mirrors
+url_patterns = ["^https?://[^/]+/(?:pub/)?gnu/ncurses/ncurses-(\\d[^/]*)\\.tar\\.gz$"]
+
+[util-linux]
+# Repology attributes some of these tarballs to the util-linux-libuuid subpackage
+url_patterns = ["^\\Qhttps://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v\\E[^/]+\\Q/util-linux-\\E(\\d[^/]*)\\Q.tar.xz\\E$"]
+
+# Downstream subpackages built from these upstream tarballs (emacs:nxml-libvirt-schemas, ffmpeg-static-libs-for-sunshine,
+# node-bokehjs) can be the only Repology packages still using a given release URL
+[ffmpeg]
+url_patterns = ["^\\Qhttps://ffmpeg.org/releases/ffmpeg-\\E(\\d[^/]*)\\Q.tar.\\E\\w+$"]
+
+[libvirt]
+url_patterns = ["^https?://(?:download\\.libvirt\\.org|libvirt\\.org/sources)/libvirt-(\\d[^/]*)\\Q.tar.\\E\\w+$"]
+
+["python:bokeh"]
+url_patterns = ["^\\Qhttps://files.pythonhosted.org/packages/source/b/bokeh/bokeh-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
+
+[qtgraphs]
+url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtgraphs-\\E"]
+
+# The CLI has its own Repology project; "bitwarden" is the desktop app
+[bitwarden-cli]
+url_patterns = ["^\\Qhttps://github.com/bitwarden/clients/releases/download/cli-v\\E(\\d[^/]*)\\Q/bw-\\E"]
+
+# Repology splits PMIx between pmix and openpmix; the CPE is on openpmix
+[openpmix]
+url_patterns = ["^\\Qhttps://github.com/openpmix/openpmix/releases/download/v\\E(\\d[^/]*)\\Q/pmix-\\E\\1\\Q.tar.\\E\\w+$"]
+
+# Downstream packages (ptxdist's rsync3, AOSC's libtiff-5) can be the only ones still using a given release URL
+[rsync]
+url_patterns = ["^\\Qhttps://download.samba.org/pub/rsync/src/rsync-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
+
+[tiff]
+url_patterns = ["^\\Qhttps://download.osgeo.org/libtiff/tiff-\\E(\\d[^/]*)\\Q.tar.\\E\\w+$"]
+
+# python:quarto-cli is a PyPI wrapper
+[quarto]
+url_patterns = ["^\\Qhttps://github.com/quarto-dev/quarto-cli/releases/download/v\\E(\\d[^/]*)\\Q/quarto-\\E\\1-"]
+
+# Repology maps these repositories to a single (or the wrong) project
+[sdl2]
+repositories = ["https://github.com/libsdl-org/SDL.git"]
+tag_patterns = [{regex = "^(?:pre)?release-(2\\..+)$"}]
+
+[sdl3]
+repositories = ["https://github.com/libsdl-org/SDL.git"]
+tag_patterns = [{regex = "^(?:pre)?release-(3\\..+)$"}]
+
+[openpolicyagent]
+repositories = ["https://github.com/open-policy-agent/opa.git"]
+
+["python:apache-tvm-ffi"]
+repositories = ["https://github.com/apache/tvm-ffi.git"]
+
+# Release URLs that Repology's data doesn't cover
+[qdrant]
+url_patterns = ["^\\Qhttps://github.com/qdrant/qdrant/releases/download/v\\E(\\d[^/]*)\\Q/qdrant-\\E"]
+
+[t8code]
+url_patterns = ["^\\Qhttps://github.com/DLR-AMR/t8code/releases/download/v\\E(\\d[^/]*)\\Q/t8-\\E\\1\\Q.tar.gz\\E$"]
+
+[wayland]
+url_patterns = ["^\\Qhttps://wayland.freedesktop.org/releases/wayland-\\E(\\d[^/]*)\\Q.tar.\\E\\w+$"]
+
+[libxcb]
+url_patterns = ["^https?://(?:www\\.)?x\\.org/(?:archive/)?individual/xcb/libxcb-(\\d[^/]*)\\.tar\\.\\w+$"]
+
+[xcb-proto]
+url_patterns = ["^https?://(?:www\\.)?x\\.org/(?:archive/)?individual/(?:xcb|proto)/xcb-proto-(\\d[^/]*)\\.tar\\.\\w+$"]
+
+[util-macros]
+url_patterns = ["^https?://(?:www\\.)?x\\.org/(?:archive/)?individual/util/util-macros-(\\d[^/]*)\\.tar\\.\\w+$"]
+
+[htop]
+url_patterns = ["^https?://hisham\\.hm/htop/releases/[^/]+/htop-(\\d[^/]*)\\.tar\\.\\w+$"]
+
+[opus]
+url_patterns = ["^https?://archive\\.mozilla\\.org/pub/opus/opus-(\\d[^/]*)\\.tar\\.\\w+$"]
+
+[eudev]
+url_patterns = ["^\\Qhttps://dev.gentoo.org/~blueness/eudev/eudev-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
+
+[sundials]
+url_patterns = ["^https?://computation\\.llnl\\.gov/projects/sundials/download/sundials-(\\d[^/]*)\\.tar\\.gz$"]
+
+[libxslt]
+url_patterns = ["^ftp://xmlsoft\\.org/libxslt/libxslt-(\\d[^/]*)\\.tar\\.gz$"]
+
+[grass-gis]
+url_patterns = ["^\\Qhttps://grass.osgeo.org/grass\\E\\d+\\Q/source/grass-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
+
+[ghostscript]
+url_patterns = ["^\\Qhttps://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs\\E\\d+\\Q/ghostscript-\\E(\\d[^/]*)\\Q.tar.\\E\\w+$"]
+
+[biome]
+url_patterns = ["^\\Qhttps://github.com/biomejs/biome/archive/refs/tags/@biomejs/biome@\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
+
+[cudss]
+url_patterns = ["^\\Qhttps://developer.download.nvidia.com/compute/cudss/redist/libcudss/\\E[^/]+\\Q/libcudss-\\E[^/]+?-(\\d+\\.\\d+\\.\\d+\\.\\d+)_cuda"]
+
+# Git repositories and tag schemes that Repology's data doesn't (or no longer) cover
+[nccl]
+repositories = ["https://github.com/NVIDIA/nccl.git"]
+tag_patterns = [{regex = "^v(\\d+\\.\\d+\\.\\d+-\\d+)$"}]
+
+[minio]
+tag_patterns = [{regex = "^RELEASE\\.(\\d{4}-\\d\\d-\\d\\dT\\d\\d-\\d\\d-\\d\\dZ)$"}]
+
+["llama.cpp"]
+repositories = ["https://github.com/ggerganov/llama.cpp.git", "https://github.com/ggml-org/llama.cpp.git"]
+tag_patterns = [{regex = "^(b\\d+)$"}]
+
+[p7zip]
+repositories = ["https://github.com/p7zip-project/p7zip"]
+
+[uasm]
+repositories = ["https://github.com/Terraspace/UASM"]
+
+[onnx]
+repositories = ["https://github.com/onnx/onnx.git"]
+
+[libfabric]
+repositories = ["https://github.com/ofiwg/libfabric"]
+
+[zxing-cpp]
+repositories = ["https://github.com/zxing-cpp/zxing-cpp.git"]
+
+[liquid-dsp]
+repositories = ["https://github.com/jgaeddert/liquid-dsp.git"]
+
+[sdl2-ttf]
+repositories = ["https://github.com/libsdl-org/SDL_ttf.git"]
+tag_patterns = [{regex = "^(?:pre)?release-(2\\..+)$"}]
+
+[sdl3-ttf]
+repositories = ["https://github.com/libsdl-org/SDL_ttf.git"]
+tag_patterns = [{regex = "^(?:pre)?release-(3\\..+)$"}]
+
+["rust:regex"]
+repositories = ["https://github.com/rust-lang/regex.git"]
+
+[wayland-protocols]
+url_patterns = ["^\\Qhttps://wayland.freedesktop.org/releases/wayland-protocols-\\E(\\d[^/]*)\\Q.tar.\\E\\w+$"]
+
+[portaudio]
+url_patterns = ["^https?://(?:www\\.)?portaudio\\.com/archives/pa_stable_v\\d+_\\d+\\.tgz()$"] # Repology spells these 190600_20161030, which isn't comparable
+
+[cutensor]
+url_patterns = ["^\\Qhttps://developer.download.nvidia.com/compute/cutensor/redist/libcutensor/\\E[^/]+\\Q/libcutensor-\\E[^/]+?-(\\d+\\.\\d+\\.\\d+\\.\\d+)(?:_cuda\\d+)?-archive"]
+
+[crosstool-ng]
+url_patterns = ["^https?://crosstool-ng\\.org/download/crosstool-ng/crosstool-ng-(\\d[^/]*)\\.tar\\.\\w+$"]
+
+[opencl-clang]
+tag_patterns = [{regex = "^v(\\d+\\.\\d+\\.\\d+-\\d+)$"}]
+
+[spirv-llvm-translator]
+tag_patterns = [{regex = "^v(\\d+\\.\\d+\\.\\d+-\\d+)$"}]
+
+[win32-openssh]
+tag_patterns = [{regex = "^[vV]?(\\d+\\.\\d+\\.\\d+\\.\\d+p\\d+-[A-Za-z]+)$"}]

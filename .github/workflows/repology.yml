@@ -2,12 +2,15 @@ name: Export from Repology's DB dump
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
 
 jobs:
   repology-export:
     runs-on: ubuntu-latest
     permissions:
       contents: write # to create the data release and push Artifacts.toml
+      pull-requests: write # to propose refreshes that need review
     defaults:
       run:
         shell: bash # -eo pipefail
@@ -36,13 +39,28 @@ jobs:
         id: update
         env:
           REPOLOGY_DATA_OUT: ${{ runner.temp }}/repology_data
+          REPOLOGY_PROJECT_CHANGES: ${{ runner.temp }}/project_changes.md
         run: |
           julia --project=. scripts/update_repology_info.jl
+          if [ -s "$REPOLOGY_PROJECT_CHANGES" ]; then
+            echo "project_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "project_changes=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Test the new data
+      - name: Check the corpus against the new data
+        id: corpus
         env:
           REPOLOGY_DATA: ${{ runner.temp }}/repology_data
+          REPOLOGY_ALLOW_FIXED: 1
         run: |
+          if julia --project=. -e 'using Pkg; Pkg.test()'; then
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "passed=false" >> "$GITHUB_OUTPUT"
+          fi
+          julia --project=. scripts/known_failures.jl
+          # known_failures.toml now accepts the regressions, so anything still failing is a real bug
           julia --project=. -e 'using Pkg; Pkg.test()'
 
       - name: Publish the new data as a dated release and bind it in Artifacts.toml (if it changed)
@@ -77,19 +95,62 @@ jobs:
       - name: Commit changes (if any)
         id: git_commit
         run: |
-            git add Artifacts.toml
+            git add Artifacts.toml test/known_failures.toml
             if git diff --cached --quiet; then
               echo "No changes to commit."
               echo "committed=false" >> "$GITHUB_OUTPUT"
             else
+              git diff --cached -U0 test/known_failures.toml > "$RUNNER_TEMP/known_failures.diff"
               git commit -m "[automatic] update the repology_data artifact"
               echo "committed=true" >> "$GITHUB_OUTPUT"
             fi
 
-      - name: Push directly to branch or main if exact
-        if: |
-            steps.git_commit.outputs.committed == 'true'
+      - name: Push to the current branch if the corpus passed and no exported URL changed project
+        if: steps.git_commit.outputs.committed == 'true' && steps.corpus.outputs.passed == 'true' && steps.update.outputs.project_changes != 'true'
         run: |
-            # For PRs, push to the PR's branch; for main, push to main
             current_branch="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
             git push origin HEAD:"$current_branch"
+
+      - name: Otherwise propose the refresh as a PR
+        if: steps.git_commit.outputs.committed == 'true' && (steps.corpus.outputs.passed != 'true' || steps.update.outputs.project_changes == 'true')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+            set -u
+            base="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+            refresh_branch="automatic/repology-data-refresh-${base//\//-}"
+            git push --force origin HEAD:"$refresh_branch"
+            known_failures="$RUNNER_TEMP/known_failures.diff"
+            project_changes="$RUNNER_TEMP/project_changes.md"
+            body="$RUNNER_TEMP/pr_body.md"
+            # shellcheck disable=SC2016 # backticks in the PR text are Markdown
+            {
+              printf 'This Repology data refresh needs review, so it was not pushed to `%s`.\n' "$base"
+              if [ -s "$known_failures" ]; then
+                cat <<'EOF'
+
+            It regressed corpus entries, now recorded in `test/known_failures.toml`. Before merging, either fix the regression in `additional_info.toml`, correct the entry in `test/corpus.toml` if the corpus was wrong and Repology is right, or accept it as a known failure.
+
+            ```diff
+            EOF
+                cat "$known_failures"
+                printf '```\n'
+              fi
+              if [ -s "$project_changes" ]; then
+                printf '\n%s previously-exported URLs now map to a different project. ' "$(($(wc -l < "$project_changes") - 2))"
+                cat <<'EOF'
+            Many are Repology renames; where a downstream package has claimed an upstream URL, add a `url_patterns` entry for the upstream project in `additional_info.toml`.
+
+            <details><summary>Project changes</summary>
+
+            EOF
+                head -n 302 "$project_changes"
+                printf '\n</details>\n'
+              fi
+              printf '\nFrom %s/%s/actions/runs/%s\n' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID"
+            } > "$body"
+            if [ -n "$(gh pr list --head "$refresh_branch" --state open --json number --jq '.[].number')" ]; then
+              gh pr edit "$refresh_branch" --body-file "$body"
+            else
+              gh pr create --base "$base" --head "$refresh_branch" --title "[automatic] Repology data refresh for review" --body-file "$body"
+            fi

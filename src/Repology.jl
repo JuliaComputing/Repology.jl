@@ -14,7 +14,7 @@ testing a refresh before it's published).
 function data_dir()
     isempty(get(ENV, "REPOLOGY_DATA", "")) || return ENV["REPOLOGY_DATA"]
     hash = artifact_hash("repology_data", joinpath(@__DIR__, "..", "Artifacts.toml"))
-    isnothing(hash) && error("the repology_data artifact hasn't been published yet; run the \"Export from Repology's DB dump\" workflow")
+    isnothing(hash) && error("artifact is missing")
     return artifact_path(hash)
 end
 

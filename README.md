@@ -1,15 +1,57 @@
-# Repology
+# Repology.jl
 
-An interface to access data from https://repology.org
+[![Documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://mbauman.github.io/Repology.jl/dev/)
+[![CI](https://github.com/mbauman/Repology.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/mbauman/Repology.jl/actions/workflows/CI.yml)
 
-## Data
+Connect arbitrary source URLs to canonically-named upstream projects.
 
-The data exported from Repology's database dump (`repositories.toml`, `downloads.toml` and `cpes.toml`) is the
-`repology_data` [artifact](https://pkgdocs.julialang.org/v1/artifacts/). Each version is its own
-[release](../../releases) tagged `data-YYYY-MM-DD` (plus the workflow run id for a second refresh that day), with the
-tarball named by its sha256 and bound in `Artifacts.toml`. `Repology.data_dir()` gives its location; set
-`REPOLOGY_DATA` to use another directory.
+Build recipes (like Julia's JLLs) download sources from all over: project
+websites, mirrors, GitHub archives, git commits. Nothing in those URLs says which
+upstream project or release they are, yet that's the first thing you need to match
+a package against security advisories or check whether it's out of date.
+[Repology](https://repology.org) already gives thousands of projects a single
+canonical name and tracks the URLs, repositories and CPEs distributions use for
+them. Repology.jl uses a snapshot of that data, plus hand-curated metadata, to map
+a source URL (and optional commit) to a Repology project and upstream version, and
+records how each answer was found.
 
-The "Export from Repology's DB dump" workflow writes a refresh with `scripts/update_repology_info.jl`, tests it,
-uploads it with `scripts/publish_data.jl`, and pushes the `Artifacts.toml` change. Never delete or replace a data
-release that any version of the package still points at.
+## Installation
+
+```julia
+using Pkg
+Pkg.add(url="https://github.com/mbauman/Repology.jl")
+```
+
+## Usage
+
+```julia
+using Repology
+id = Repology.identify("https://github.com/libexpat/libexpat/releases/download/R_2_8_3/expat-2.8.3.tar.xz")
+(id.project, id.version, id.provenance)
+# ("expat", "2.8.3", "url-pattern")
+```
+
+Names are qualified (the module exports none). An unknown URL returns an
+identification with `nothing` fields; a known project can lack a version. Pass
+`commit=` for repository sources; tag lookup may access the network and clone
+the repository. See the [guide and API reference](https://mbauman.github.io/Repology.jl/dev/).
+
+## Curation and data refresh
+
+`additional_info.toml` supplies per-project URL patterns, repositories, tag
+patterns, hand-verified sources, CPE prefixes, and version schemes. Add regression
+tests with curation changes and run `julia --project=. -e 'using Pkg; Pkg.test()'`.
+Metadata is cached, so restart Julia after edits.
+
+`repositories.toml`, `downloads.toml`, and `cpes.toml` live in the `repology_data`
+artifact bound by `Artifacts.toml`. `Repology.data_dir()` resolves its directory;
+set `REPOLOGY_DATA` before loading data to test an alternate snapshot.
+
+The weekly/manual **Export from Repology's DB dump** workflow extracts a refresh
+with `scripts/update_repology_info.jl`, retaining older entries absent from the
+new dump. It tests the corpus and packages/uploads changed data with
+`scripts/publish_data.jl` into immutable `data-YYYY-MM-DD` releases (plus a run id
+for repeat refreshes). Clean refreshes push the artifact binding; regressions or
+changed project mappings produce a review PR. Never delete or replace a data
+release referenced by any package version. The
+[guide](https://mbauman.github.io/Repology.jl/dev/guide/) covers local refreshes and curation.

@@ -13,4 +13,7 @@ The weekly "Export from Repology's DB dump" workflow writes a refresh with `scri
 it against the test corpus, uploads it with `scripts/publish_data.jl`, and then pushes the `Artifacts.toml` change or
 opens a PR for review. Never delete or replace a data release that any version of the package still points at.
 
+Until the first artifact is published (by running that workflow), `scripts/seed_data_from_git.sh` gives the
+workflow and CI the data last committed to git, so the first refresh keeps the previously-exported entries.
+
 Hand-curated data (`additional_info.toml`, `test/corpus.toml`) stays in this repository.

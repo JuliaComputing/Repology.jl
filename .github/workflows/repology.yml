@@ -33,6 +33,11 @@ jobs:
         run: |
             julia --project=. -e 'using Pkg; Pkg.instantiate()'
 
+      - name: Use the data last committed to git until the first artifact is published
+        run: |
+          dir=$(scripts/seed_data_from_git.sh "$RUNNER_TEMP/previous_data")
+          [ -z "$dir" ] || echo "REPOLOGY_DATA=$dir" >> "$GITHUB_ENV"
+
       - name: Update package components
         id: update
         env:

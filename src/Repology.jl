@@ -2,7 +2,7 @@ module Repology
 
 using TOML: TOML
 using DataStructures: OrderedDict
-using Artifacts: @artifact_str
+using Artifacts: artifact_hash, artifact_path
 
 """
     data_dir()
@@ -11,7 +11,12 @@ The directory with the data exported from Repology's database dump (`repositorie
 `cpes.toml`). It's the `repology_data` artifact, or the `REPOLOGY_DATA` environment variable if set (used when
 testing a refresh before it's published).
 """
-data_dir() = haskey(ENV, "REPOLOGY_DATA") ? ENV["REPOLOGY_DATA"] : artifact"repology_data"
+function data_dir()
+    isempty(get(ENV, "REPOLOGY_DATA", "")) || return ENV["REPOLOGY_DATA"]
+    hash = artifact_hash("repology_data", joinpath(@__DIR__, "..", "Artifacts.toml"))
+    isnothing(hash) && error("the repology_data artifact hasn't been published yet; run the \"Export from Repology's DB dump\" workflow")
+    return artifact_path(hash)
+end
 
 const REPOSITORY_DATA = Ref{Dict{String,String}}()
 function repository_data()

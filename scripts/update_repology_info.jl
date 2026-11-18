@@ -1,4 +1,5 @@
 using TOML: TOML
+using Repology: Repology
 using DataStructures: DefaultDict, DefaultOrderedDict, OrderedDict
 using DataFrames: DataFrames, DataFrame, groupby, combine, transform, eachrow, nrow, select!, Not
 
@@ -142,13 +143,13 @@ function main(dump=DUMP_URL)
     downloads, repositories = gather_links(df)
     cpes = gather_cpes(pkg_cpes, manual_cpes)
 
-    data = joinpath(@__DIR__, "..", "data")
+    data = get(ENV, "REPOLOGY_DATA_OUT", joinpath(@__DIR__, "..", "data"))
     mkpath(data)
 
     # Each dump only has the packages that distributions currently ship, so download URLs for older releases (and
-    # repositories that are ambiguous this week) drop out of it. Keep previously-exported entries unless the new
-    # dump says otherwise.
-    existing(file) = isfile("$data/$file") ? TOML.parsefile("$data/$file") : Dict{String,Any}()
+    # repositories that are ambiguous this week) drop out of it. Keep previously-exported entries (from the current
+    # data artifact) unless the new dump says otherwise.
+    existing(file) = TOML.parsefile(joinpath(Repology.data_dir(), file))
     old_downloads = Dict(k => (v[1] => v[2]) for (k,v) in existing("downloads.toml"))
     old_repositories = Dict{String,String}(existing("repositories.toml"))
     write_project_changes(get(ENV, "REPOLOGY_PROJECT_CHANGES", ""),

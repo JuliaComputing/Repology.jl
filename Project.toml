@@ -4,12 +4,14 @@ version = "1.0.0"
 authors = ["Matt Bauman <mbauman@juliahub.com>", "and contributors"]
 
 [deps]
+Artifacts = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 libversion_jll = "536dcc1b-10b1-5f38-bd5e-495471764a69"
 
 [compat]
+Artifacts = "1"
 DataFrames = "1.8.0"
 DataStructures = "0.19.1"
 TOML = "1.0.3"

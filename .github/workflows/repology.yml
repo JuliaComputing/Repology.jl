@@ -37,6 +37,7 @@ jobs:
         id: update
         env:
           REPOLOGY_PROJECT_CHANGES: /tmp/project_changes.md
+          REPOLOGY_DATA_OUT: ${{ runner.temp }}/repology_data
         run: |
           julia --project=. scripts/update_repology_info.jl
           if [ -s /tmp/project_changes.md ]; then
@@ -49,6 +50,7 @@ jobs:
         id: corpus
         env:
           REPOLOGY_ALLOW_FIXED: 1
+          REPOLOGY_DATA: ${{ runner.temp }}/repology_data
         run: |
           if julia --project=. -e 'using Pkg; Pkg.test()'; then
             echo "passed=true" >> $GITHUB_OUTPUT
@@ -57,10 +59,24 @@ jobs:
           fi
           julia --project=. scripts/known_failures.jl
 
+      - name: Publish the new data as a release asset and bind it in Artifacts.toml (if it changed)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+            tarball=$(julia --project=. scripts/publish_data.jl "$RUNNER_TEMP/repology_data" "$RUNNER_TEMP/tarballs" \
+              "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/repology-data")
+            if [ -n "$tarball" ]; then
+              gh release view repology-data > /dev/null 2>&1 ||
+                gh release create repology-data --latest=false --title "Repology data" \
+                  --notes "Data exported from Repology's database dump, one asset per version of the \`repology_data\` artifact in Artifacts.toml. Assets are referenced by content hash; never delete or replace them."
+              gh release view repology-data --json assets --jq '.assets[].name' | grep -qxF "$(basename "$tarball")" ||
+                gh release upload repology-data "$tarball"
+            fi
+
       - name: Commit changes (if any)
         id: git_commit
         run: |
-            git add data/ test/known_failures.toml
+            git add Artifacts.toml test/known_failures.toml
             if git diff --cached --quiet; then
               echo "No changes to commit."
               echo "committed=false" >> $GITHUB_OUTPUT
@@ -80,6 +96,7 @@ jobs:
         if: steps.git_commit.outputs.committed == 'true' && (steps.corpus.outputs.passed != 'true' || steps.update.outputs.project_changes == 'true')
         env:
           GH_TOKEN: ${{ github.token }}
+          REPOLOGY_DATA: ${{ runner.temp }}/repology_data
         run: |
             # known_failures.toml now accepts the regressions, so anything still failing is a real bug
             julia --project=. -e 'using Pkg; Pkg.test()'

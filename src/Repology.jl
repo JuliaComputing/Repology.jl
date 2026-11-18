@@ -2,11 +2,27 @@ module Repology
 
 using TOML: TOML
 using DataStructures: OrderedDict
+using Artifacts: artifact_hash, artifact_path
+
+"""
+    data_dir()
+
+The directory with the data exported from Repology's database dump (`repositories.toml`, `downloads.toml` and
+`cpes.toml`). It's the `repology_data` artifact, or the `REPOLOGY_DATA` environment variable if set (used when
+testing a refresh before it's published). Until the first artifact is published, it's the `data` directory of this
+repository.
+"""
+function data_dir()
+    isempty(get(ENV, "REPOLOGY_DATA", "")) || return ENV["REPOLOGY_DATA"]
+    hash = artifact_hash("repology_data", joinpath(@__DIR__, "..", "Artifacts.toml"))
+    isnothing(hash) && return joinpath(@__DIR__, "..", "data")
+    return artifact_path(hash)
+end
 
 const REPOSITORY_DATA = Ref{Dict{String,String}}()
 function repository_data()
     isassigned(REPOSITORY_DATA) && return REPOSITORY_DATA[]
-    data = TOML.parsefile(joinpath(@__DIR__, "..", "data", "repositories.toml"))
+    data = TOML.parsefile(joinpath(data_dir(), "repositories.toml"))
     for (k,v) in sort!(collect(data), by=first)
         # also store normalized URLs directly for matching
         data[normalize_url(k)] = v
@@ -18,7 +34,7 @@ function download_data()
     isassigned(DOWNLOAD_DATA) && return DOWNLOAD_DATA[]
     data = Dict{String,Tuple{String,String}}()
     # Iterate in sorted order so that collisions between normalized URLs resolve the same way on every Julia version
-    for (k,v) in sort!(collect(TOML.parsefile(joinpath(@__DIR__, "..", "data", "downloads.toml"))), by=first)
+    for (k,v) in sort!(collect(TOML.parsefile(joinpath(data_dir(), "downloads.toml"))), by=first)
         data[k] = (v[1], v[2])
         data[normalize_url(k)] = (v[1], v[2])
     end
@@ -89,7 +105,7 @@ end
 const CPE_DATA = Ref{Dict{String,Any}}()
 function cpe_data()
     isassigned(CPE_DATA) && return CPE_DATA[]
-    return CPE_DATA[] = TOML.parsefile(joinpath(@__DIR__, "..", "data", "cpes.toml"))
+    return CPE_DATA[] = TOML.parsefile(joinpath(data_dir(), "cpes.toml"))
 end
 
 """

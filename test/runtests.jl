@@ -68,6 +68,8 @@ end
     @test !Repology.is_plausible_version("expat", "v2.8.3")
     @test !Repology.is_plausible_version("expat", nothing)
     @test Repology.is_plausible_version("llama.cpp", "b7821")
+    @test !Repology.is_plausible_version("llama.cpp", "3bcc129")
+    @test !Repology.is_plausible_version("gdk-pixbuf", "3c7740498fd31b6746dd7e04601886766a6644b7")
     @test "git" in Repology.known_versions()["vim"] && !Repology.is_plausible_version("vim", "git")
     @test !Repology.is_plausible_version("expat", "b2.8.3")
     @test Repology.is_plausible_version("crosstool-ng", "1.25.0_rc1")

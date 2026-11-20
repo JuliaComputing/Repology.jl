@@ -31,8 +31,11 @@ url_patterns = ["^\\Qhttp://fftw.org/~stevenj/fftw-\\E(\\d.*)\\Q.tar.gz\\E$"]
 [gr]
 repositories = ["https://github.com/sciapp/gr.git"]
 
+[git]
+url_patterns = ["^\\Qhttps://github.com/git-for-windows/git/releases/download/v\\E(\\d.*)\\Q.windows.1/Git-\\E\\1-(?:32|64)\\Q-bit.tar.bz2\\E$"]
+
 [git-for-windows]
-url_patterns = ["^\\Qhttps://github.com/git-for-windows/git/releases/download/v\\E(\\d[^/]*\\.windows\\.\\d+)/Git-[^/]+-(?:32|64)\\Q-bit.tar.bz2\\E$"]
+url_patterns = ["^\\Qhttps://github.com/git-for-windows/git/releases/download/v\\E(\\d.*)\\Q/Git-\\E.+-(?:32|64)\\Q-bit.tar.bz2\\E$"]
 
 [glib]
 url_patterns = ["^\\Qhttps://ftp.gnome.org/pub/gnome/sources/glib/\\E[^/]+\\Q/glib-\\E(\\d.*)\\Q.tar.xz\\E$"]

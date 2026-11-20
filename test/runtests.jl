@@ -3,6 +3,8 @@ using Repology: Identification, identify, parse_tag_version
 using TOML
 using Test
 
+include("export.jl")
+
 @testset "identify_upstream" begin
     @test Repology.identify_upstream("https://www.cairographics.org/releases/cairo-1.32.0.tar.xz", "") == ("cairo-graphics-library", "1.32.0")
     @test Repology.identify_upstream("https://download.gnome.org/sources/glib-networking/2.74/glib-networking-2.74.0.tar.xz", "") == ("glib-networking", "2.74.0")

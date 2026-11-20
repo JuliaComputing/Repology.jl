@@ -40,6 +40,19 @@ end
     @test Repology.version_from_tag("sdl3", "release-3.2.0") == "3.2.0"
 end
 
+@testset "canonical source URL boundaries" begin
+    patterns = Repology.curated_url_patterns()
+    for url in ("", "https://example.invalid/Python-3.11.12.tar.xz",
+                "https://www.python.org/ftp/python/3.11.12/Python-3.11.12.tar.xz.asc",
+                "https://nodejs.org/dist/v16.0.0/node-v18.0.0-linux-x64.tar.gz",
+                "https://nodejs.org/dist/v16.0.0/SHASUMS256.txt",
+                "https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.xz.sig",
+                "https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.16.tar.gz.sig",
+                "https://github.com/denoland/deno/releases/download/v2.9.8/deno.zip.sha256sum")
+        @test !any(p -> occursin(first(p), url), patterns)
+    end
+end
+
 @testset "tag parsing" begin
     for (tag, ver) in ("R_2_8_3" => "2.8.3", "REL_16_9" => "16.9", "V_9_2_P1" => "9.2p1", "v5.9.3-stable" => "5.9.3",
                        "Release_2022_09_1" => "2022.09.1", "PCRE2-10.42" => "10.42", "openssl-3.5.8" => "3.5.8",

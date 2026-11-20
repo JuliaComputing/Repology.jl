@@ -81,10 +81,9 @@ end
         ("https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.2/clang-20.1.2.src.tar.xz", "llvm", "20.1.2"))
         @test identify(url) == Identification(project, version, "url-pattern")
     end
-    for (module_name, project) in (("qtcharts", "qt6charts"), ("qtquick3d", "qt6quick3d"),
-                                  ("qtquicktimeline", "qt6quicktimeline"), ("qtsvg", "qt6svg"), ("qttools", "qt6tools"))
+    for module_name in ("qtcharts", "qtquick3d", "qtquicktimeline", "qtsvg", "qttools")
         url = "https://download.qt.io/official_releases/qt/6.10/6.10.2/submodules/$module_name-everywhere-src-6.10.2.tar.xz"
-        @test identify(url) == Identification(project, "6.10.2", "url-pattern")
+        @test identify(url) == Identification("qt", "6.10.2", "url-pattern")
     end
     for url in ("", "https://ftp.gnu.org/gnu/mpc/mpc-1.3.1.tar.gz.sig",
                 "https://download.qt.io/official_releases/qt/6.10/6.10.2/submodules/qtsvg-everywhere-src-6.10.1.tar.xz",
@@ -102,15 +101,58 @@ end
         url = "https://download.qt.io/official_releases/qt/5.15/5.15.2/submodules/$module_name-everywhere-src-5.15.2.tar.xz"
         @test identify(url) == Identification("qt", "5.15.2", "url-pattern")
         qt6_url = "https://download.qt.io/official_releases/qt/6.10/6.10.2/submodules/$module_name-everywhere-src-6.10.2.tar.xz"
-        @test identify(qt6_url) == Identification("qt6" * chopprefix(module_name, "qt"), "6.10.2", "url-pattern")
+        @test identify(qt6_url) == Identification("qt", "6.10.2", "url-pattern")
     end
-    @test identify("https://download.qt.io/official_releases/qt/5.15/5.15.2/submodules/qtbase-everywhere-src-5.15.2.tar.xz").project == "qtbase"
+    @test identify("https://download.qt.io/official_releases/qt/5.15/5.15.2/submodules/qtbase-everywhere-src-5.15.2.tar.xz").project == "qt"
     for url in ("", "https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.0/libunwind-11.0.1.src.tar.xz",
                 "https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.0/libunwind-11.0.0.src.tar.xz.asc",
                 "https://download.qt.io/official_releases/qt/5.15/5.15.2/submodules/qtsvg-everywhere-src-5.15.3.tar.xz",
                 "https://download.qt.io/official_releases/qt/5.15/5.15.2/submodules/qtsvg-everywhere-src-6.10.2.tar.xz",
                 "https://download.qt.io/official_releases/qt/6.10/5.15.2/submodules/qtsvg-everywhere-src-5.15.2.tar.xz")
         @test !any(p -> occursin(first(p), url), Repology.curated_url_patterns())
+    end
+end
+
+@testset "monolithic Qt source archives" begin
+    components=("qt3d","qtconnectivity","qtdatavis3d","qtdeclarative","qtimageformats","qtlocation",
+        "qtmultimedia","qtnetworkauth","qtpositioning","qtremoteobjects","qtscxml","qtsensors",
+        "qtserialbus","qtserialport","qtshadertools","qtspeech","qttranslations","qtvirtualkeyboard",
+        "qtwayland","qtwebchannel","qtwebsockets","qtwebview","qtbase","qtcharts","qtquick3d",
+        "qtquicktimeline","qtsvg","qttools","qtgraphs","qt5compat","qtquickcontrols","qtquickcontrols2",
+        "qtfuturecomponent")
+    patterns=Repology.curated_url_patterns()
+    for scheme in ("http","https"), root in ("download.qt.io","mirrors.dotsrc.org/qtproject","ftp.fau.de/qtproject"),
+        directory in ("official_releases","archive"),
+        (series,version) in (("5.15","5.15.2"),("515","5.15.1"),("6.12","6.12.0"),("612","6.12.0")),
+        source in ("src","opensource-src"), extension in ("xz","gz")
+        base="$scheme://$root/$directory/qt/$series/$version"
+        for component in components
+            url="$base/submodules/$component-everywhere-$source-$version.tar.$extension"
+            @test identify(url)==Identification("qt",version,"url-pattern")
+        end
+        @test identify("$base/single/qt-everywhere-$source-$version.tar.$extension")==Identification("qt",version,"url-pattern")
+    end
+    for scheme in ("http","https"), directory in ("official_releases","archive")
+        base="$scheme://download.qt.io/$directory/qt"
+        for path in ("6.12/6.12.0/submodules/qtbase-everywhere-src-6.12.1.tar.xz",
+                     "6.12/6.12.0/submodules/qtbase-everywhere-src-5.15.2.tar.xz",
+                     "6.11/6.12.0/submodules/qtbase-everywhere-src-6.12.0.tar.xz",
+                     "5.12/6.12.0/submodules/qtbase-everywhere-src-6.12.0.tar.xz",
+                     "611/6.12.0/submodules/qtbase-everywhere-src-6.12.0.tar.xz",
+                     "512/6.12.0/single/qt-everywhere-src-6.12.0.tar.xz",
+                     "6.12/6.12.0/submodules/qtbase-everywhere-src-6.12.0.tar.xz.asc",
+                     "6.12/6.12.0/submodules/qtbase-everywhere-src-6.12.0.tar.gz.sig",
+                     "6.12/6.12.0/submodules/qtbase-everywhere-src-6.12.0.tar.xz/extra",
+                     "6.12/6.12.0/submodules/other-everywhere-src-6.12.0.tar.xz",
+                     "6.12/6.12.0/single/qt-everywhere-src-6.12.1.tar.xz",
+                     "6.12/6.12.0/single/qt-everywhere-src-6.12.0.tar.xz.asc",
+                     "4.8/4.8.7/submodules/qtbase-everywhere-src-4.8.7.tar.xz")
+            @test !any(p->occursin(first(p),"$base/$path"),patterns)
+        end
+    end
+    for url in ("", "http://example.invalid/qtbase-everywhere-src-6.12.0.tar.xz",
+                "ftp://download.qt.io/archive/qt/6.12/6.12.0/submodules/qtbase-everywhere-src-6.12.0.tar.xz")
+        @test !any(p->occursin(first(p),url),patterns)
     end
 end
 

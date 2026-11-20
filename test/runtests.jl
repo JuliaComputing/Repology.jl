@@ -40,6 +40,11 @@ end
     @test Repology.version_from_tag("sdl3", "release-3.2.0") == "3.2.0"
 end
 
+@testset "handwritten source regressions" begin
+    @test identify("https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz") == Identification("libiconv", "1.18", "url-pattern")
+    @test identify("https://github.com/git-for-windows/git/releases/download/v2.42.0.windows.2/Git-2.42.0.2-32-bit.tar.bz2") == Identification("git-for-windows", "2.42.0.windows.2", "url-pattern")
+end
+
 @testset "GNU mirror archives" begin
     for (project, version) in (("binutils", "2.41"), ("libiconv", "1.16")),
         prefix in ("https://ftp.gnu.org/gnu/", "https://ftp.gnu.org/pub/gnu/",

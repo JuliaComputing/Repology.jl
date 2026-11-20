@@ -16,19 +16,9 @@ project = "libiconv"
 version = "1.16"
 [[entry]]
 kind = "manual"
-url = "https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz"
-project = "libiconv"
-version = "1.18"
-[[entry]]
-kind = "manual"
 url = "https://github.com/git-for-windows/git/releases/download/v2.23.0.windows.1/Git-2.23.0-32-bit.tar.bz2"
 project = "git"
 version = "2.23.0"
-[[entry]]
-kind = "manual"
-url = "https://github.com/git-for-windows/git/releases/download/v2.42.0.windows.2/Git-2.42.0.2-32-bit.tar.bz2"
-project = "git-for-windows"
-version = "2.42.0.windows.2"
 [[entry]]
 kind = "manual"
 url = "https://github.com/denoland/deno/releases/download/v2.9.8/deno-x86_64-unknown-linux-gnu.zip"

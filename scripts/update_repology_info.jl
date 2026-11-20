@@ -1,7 +1,7 @@
 using TOML: TOML
 using Repology: Repology
 using DataStructures: DefaultDict, DefaultOrderedDict, OrderedDict
-using DataFrames: DataFrames, DataFrame, groupby, combine, transform, eachrow, nrow, select!, Not
+using DataFrames: DataFrames, DataFrame, groupby, transform, eachrow, nrow, select!, Not
 
 const DUMP_URL = "https://dumps.repology.org/repology-database-dump-latest.sql.zst"
 
@@ -21,6 +21,7 @@ function read_dump(io)
     pkg_cpes = Set{Tuple{String,String}}()
     manual_cpes = Tuple{String,String}[]
     intern = Dict{String,String}()
+    project_families = Dict{String,Set{String}}()
     table, cols = "", Dict{String,Int}()
     for line in eachline(io)
         if isempty(table)
@@ -37,6 +38,8 @@ function read_dump(io)
             links[parse(Int32, f[cols["id"]])] = copy_value(f[cols["url"]])
         elseif table == "packages"
             effname = get!(intern, f[cols["effname"]], f[cols["effname"]])
+            family = get!(intern, f[cols["family"]], f[cols["family"]])
+            push!(get!(Set{String}, project_families, effname), family)
             vendor, product = copy_value(f[cols["cpe_vendor"]]), copy_value(f[cols["cpe_product"]])
             !ismissing(vendor) && !ismissing(product) && push!(pkg_cpes, (effname, "$vendor:$product"))
             repo = get!(intern, f[cols["repo"]], f[cols["repo"]])
@@ -58,54 +61,49 @@ function read_dump(io)
     df = DataFrame(pkgs)
     df.url = [links[id] for id in df.link_id]
     select!(df, Not(:link_id))
-    return df, pkg_cpes, manual_cpes
+    return df, pkg_cpes, manual_cpes, Dict(p => length(fs) for (p, fs) in project_families)
 end
 
-function gather_links(df)
-    # We'll only trust download URLs when only one was used for the given package
-    # Many packages have more than one download, but then we don't know if that was a (build) dependency
-    # or the actual project or perhaps some larger meta-project that vendors lots of deps.
-    filtered_df = df |>
+function gather_links(df, family_counts; minimum_margin=2)
+    minimum_margin >= 1 || throw(ArgumentError("minimum_margin must be positive"))
+    # Uncontested URLs still require a single source URL per package.
+    counted_df = df |>
         x -> groupby(x, [:repo, :effname, :rawversion, :arch]) |>
-        x -> transform(x, :url => (x -> length(unique(x))) => :n_unique_urls) |>
-        x -> filter(row -> row.n_unique_urls == 1, x) |>
-        # And also remove any rows for which the same URL points at two different effnames:
-        x -> groupby(x, :url) |>
-        x -> transform(x, :effname => (x -> length(unique(x))) => :n_unique_effnames) |>
-        x -> filter(row -> row.n_unique_effnames == 1, x)
-
-    # For repositories (link_type == 2), ignore versions
+        x -> transform(x, :url => (x -> length(unique(x))) => :n_unique_urls)
+    counted_df.normalized_url = Repology.normalize_url.(counted_df.url)
     repositories = Dict{String,String}()
-    for row in eachrow(filtered_df[filtered_df.link_type .== 2, :])
-        if haskey(repositories, row.url) && repositories[row.url] != row.effname
-            @warn "$(row.url) identifies both $(row.effname) and $(repositories[row.url])"
-            repositories[row.url] = "" # poison repos that are used for more than one project
-            continue
-        end
-        repositories[row.url] = row.effname
-    end
-    filter!(!isempty∘last, repositories)
-
-    @info "gather downloads"
-    # For downloads (link_type == 1), the versions may be meaningfully linked to the URL
-    url_groups = combine(groupby(filtered_df[filtered_df.link_type .== 1, :], [:url, :effname]), :origversion => (x -> [unique(x)]) => :versions)
     downloads = Dict{String, Pair{String,String}}()
-    for row in eachrow(url_groups)
-        length(row.versions) == 1 || continue
-        # Ignore download URLs that don't explicitly include the URL
-        # these are often things like -latest or the like
-        v = only(row.versions)
-        contains(row.url, v) || continue
-        if haskey(downloads, row.url) && downloads[row.url] != (row.effname => v)
-            @warn "$(row.url) identifies both $(row.effname => v) and $(downloads[row.url])"
-            downloads[row.url] = "" => ""
-            continue
+    resolved = Dict{String,String}()
+    for group in groupby(counted_df, :normalized_url)
+        projects = unique(group.effname)
+        sort!(projects; by=p -> (-family_counts[p], p))
+        contested = length(projects) > 1
+        contested && family_counts[projects[1]] - family_counts[projects[2]] < minimum_margin && continue
+        project = first(projects)
+        rows = filter(row -> row.effname == project && (contested || row.n_unique_urls == 1), group)
+        isempty(rows) && continue
+        normalized = first(group.normalized_url)
+        resolved[normalized] = project
+        aliases = unique(group.url)
+        if any(==(2), rows.link_type)
+            for url in aliases
+                repositories[url] = project
+            end
         end
-        downloads[row.url] = (row.effname => v)
+        versions = unique(rows.origversion[rows.link_type .== 1])
+        length(versions) == 1 || continue
+        v = only(versions)
+        isempty(v) && continue
+        for url in aliases
+            contains(url, v) && (downloads[url] = project => v)
+        end
     end
-    filter!(!isempty∘last∘last, downloads)
+    return downloads, repositories, resolved
+end
 
-    return downloads, repositories
+function retarget_history(old, resolved; downloads=false)
+    return Dict(url => (downloads ? get(resolved, Repology.normalize_url(url), first(value)) => last(value) :
+        get(resolved, Repology.normalize_url(url), value)) for (url, value) in old)
 end
 
 function gather_cpes(pkg_cpes, manual_cpes)
@@ -136,11 +134,11 @@ end
 
 function main(dump=DUMP_URL)
     @info "reading $dump"
-    df, pkg_cpes, manual_cpes = open(pipeline(isfile(dump) ? `cat $dump` : `curl -sSfL $dump`, `zstd -dc`)) do io
+    df, pkg_cpes, manual_cpes, family_counts = open(pipeline(isfile(dump) ? `cat $dump` : `curl -sSfL $dump`, `zstd -dc`)) do io
         read_dump(io)
     end
     @info "read $(nrow(df)) package links"
-    downloads, repositories = gather_links(df)
+    downloads, repositories, resolved = gather_links(df, family_counts)
     cpes = gather_cpes(pkg_cpes, manual_cpes)
 
     data = ENV["REPOLOGY_DATA_OUT"]
@@ -152,11 +150,11 @@ function main(dump=DUMP_URL)
     existing(file) = TOML.parsefile(joinpath(Repology.data_dir(), file))
     old_downloads = Dict(k => (v[1] => v[2]) for (k,v) in existing("downloads.toml"))
     old_repositories = Dict{String,String}(existing("repositories.toml"))
+    downloads = merge(retarget_history(old_downloads, resolved; downloads=true), downloads)
+    repositories = merge(retarget_history(old_repositories, resolved), repositories)
     write_project_changes(get(ENV, "REPOLOGY_PROJECT_CHANGES", ""),
         [(url, first(old_downloads[url]), first(p)) for (url, p) in downloads if haskey(old_downloads, url)],
         [(url, old_repositories[url], p) for (url, p) in repositories if haskey(old_repositories, url)])
-    downloads = merge(old_downloads, downloads)
-    repositories = merge(old_repositories, repositories)
     cpes = merge(Dict{String,Vector{String}}(k => String.(v) for (k,v) in existing("cpes.toml")), cpes)
 
     header = "# This file is autogenerated with data from https://repology.com"

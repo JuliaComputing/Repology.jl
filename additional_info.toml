@@ -13,6 +13,12 @@
 [ampl-asl]
 url_patterns = ["^\\Qhttp://netlib.org/ampl/solvers.tgz\\E()$"] # No versioning info available
 
+[binutils]
+url_patterns = ["^https?://(?:ftp\\.gnu\\.org|ftpmirror\\.gnu\\.org)/(?:(?:pub/)?gnu/)?binutils/binutils-(\\d[^/]*)\\.tar\\.(?:gz|bz2|xz|lz)$"]
+
+[deno]
+url_patterns = ["^\\Qhttps://github.com/denoland/deno/releases/download/v\\E(\\d[^/]*)/deno-[^/]+\\.zip$"]
+
 [epoll-shim]
 repositories = ["https://github.com/jiixyj/epoll-shim.git"]
 
@@ -21,6 +27,9 @@ url_patterns = ["^\\Qhttps://github.com/libexpat/libexpat/releases/download/R\\E
 
 [fftw]
 url_patterns = ["^\\Qhttp://fftw.org/~stevenj/fftw-\\E(\\d.*)\\Q.tar.gz\\E$"]
+
+[gnumpc]
+url_patterns = ["^https?://(?:ftp\\.gnu\\.org|ftpmirror\\.gnu\\.org)/(?:(?:pub/)?gnu/)?mpc/mpc-(\\d[^/]*)\\.tar\\.(?:gz|bz2|xz|lz)$"]
 
 [gr]
 repositories = ["https://github.com/sciapp/gr.git"]
@@ -48,6 +57,9 @@ repositories = ["https://github.com/JuliaLinearAlgebra/libblastrampoline.git", "
 [libevdev]
 repositories = ["https://gitlab.freedesktop.org/libevdev/libevdev"]
 
+[libiconv]
+url_patterns = ["^https?://(?:ftp\\.gnu\\.org|ftpmirror\\.gnu\\.org)/(?:(?:pub/)?gnu/)?libiconv/libiconv-(\\d[^/]*)\\.tar\\.(?:gz|bz2|xz|lz)$"]
+
 [libpng]
 url_patterns = [
     "^\\Qhttps://sourceforge.net/projects/libpng/files/libpng\\E\\d+/([^/]+)/",
@@ -66,9 +78,66 @@ repositories = ["https://github.com/ARMmbed/mbedtls.git"]
 # Repology splits these release tarballs between msgpack and msgpack-c
 url_patterns = ["^\\Qhttps://github.com/msgpack/msgpack-c/releases/download/c-\\E(\\d[^/]*)\\Q/msgpack-c-\\E\\1\\Q.tar.gz\\E$"]
 
+[mpg123]
+url_patterns = ["^https?://downloads\\.sourceforge\\.net/(?:sourceforge/)?mpg123/mpg123-(\\d[^/]*)\\.tar\\.(?:gz|bz2|xz)$"]
+
+[mingw-w64]
+url_patterns = ["^https?://sourceforge\\.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/mingw-w64-v(\\d[^/]*)\\.tar\\.(?:bz2|gz|xz)(?:/download)?$"]
+
+[notcurses]
+repositories = ["https://github.com/dankamongmen/notcurses.git"]
+url_patterns = ["^https://github\\.com/dankamongmen/notcurses/archive/(?:refs/tags/)?v?(\\d[^/]*)\\.tar\\.gz$"]
+
+[s2geometry]
+repositories = ["https://github.com/google/s2geometry.git"]
+url_patterns = ["^https://github\\.com/google/s2geometry/archive/(?:refs/tags/)?v?(\\d[^/]*)\\.tar\\.gz$"]
+
+[nanoarrow]
+repositories = ["https://github.com/apache/arrow-nanoarrow.git"]
+tag_patterns = [{regex = "^apache-arrow-nanoarrow-(\\d[^/]*)$"}]
+url_patterns = ["^https://github\\.com/apache/arrow-nanoarrow/archive/(?:refs/tags/)?(?:apache-arrow-nanoarrow-)?v?(\\d[^/]*)\\.tar\\.gz$"]
+
+[rocm-llvm]
+repositories = ["https://github.com/ROCm/llvm-project.git"]
+tag_patterns = [{regex = "^rocm-(\\d+\\.\\d+\\.\\d+)$"}]
+
+["rust:apple-codesign"]
+url_patterns = ["^https://github\\.com/indygreg/(?:PyOxidizer|apple-platform-rs)/archive/(?:refs/tags/)?apple-codesign/(\\d[^/]*)\\.tar\\.gz$"]
+
+[htslib]
+repositories = ["https://github.com/samtools/htslib.git"]
+url_patterns = ["^https://github\\.com/samtools/htslib/releases/download/(\\d[^/]*)/htslib-\\1\\.tar\\.(?:bz2|gz|xz)$"]
+
+[json-c]
+repositories = ["https://github.com/json-c/json-c.git"]
+url_patterns = ["^https://s3\\.amazonaws\\.com/json-c_releases/releases/json-c-(\\d[^/]*)\\.tar\\.(?:gz|xz)$"]
+
+[openssl]
+repositories = ["https://github.com/openssl/openssl.git"]
+url_patterns = ["^https://github\\.com/openssl/openssl/releases/download/openssl-(\\d[^/]*)/openssl-\\1\\.tar\\.gz$", "^https?://(?:www\\.)?openssl\\.org/source/(?:old/[^/]+/)?openssl-(\\d[^/]*)\\.tar\\.gz$"]
+
+[openpmd-api]
+repositories = ["https://github.com/openPMD/openPMD-api.git"]
+url_patterns = ["^https://github\\.com/openPMD/openPMD-api/archive/(?:refs/tags/)?v?(\\d[^/]*)\\.tar\\.gz$"]
+
+[xz]
+url_patterns = ["^https?://(?:www\\.)?tukaani\\.org/xz/xz-(\\d[^/]*)\\.tar\\.(?:xz|bz2|gz)$"]
+
+[zlib]
+url_patterns = ["^https?://(?:www\\.)?zlib\\.net/(?:fossils/)?zlib-(\\d[^/]*)\\.tar\\.(?:gz|xz|bz2)$"]
+
+[llvm]
+url_patterns = ["^\\Qhttps://github.com/llvm/llvm-project/releases/download/llvmorg-\\E(\\d[^/]*)/(?:libclc|clang|libunwind)-\\1\\.src\\.tar\\.(?:xz|gz)$"]
+
+[nodejs]
+url_patterns = ["^https?://(?:www\\.)?nodejs\\.org/(?:dist|download/release)/v(\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?)/node-v\\1(?:-[^/]+)?\\.(?:tar\\.(?:gz|xz)|zip|7z)$"]
+
 [openspecfun]
 repositories = ["https://github.com/JuliaMath/openspecfun.git"]
 url_patterns = ["^\\Qhttps://github.com/JuliaMath/openspecfun/archive/v\\E(\\d.*)\\Q.tar.gz\\E$"]
+
+[python]
+url_patterns = ["^https?://(?:www\\.)?python\\.org/ftp/python/[^/]+/Python-(\\d[^/]*)\\.tar\\.(?:xz|gz)$"]
 
 [suitesparse]
 repositories = ["https://github.com/DrTimothyAldenDavis/SuiteSparse.git", "https://github.com/Wimmerer/SuiteSparse.git"]
@@ -102,7 +171,10 @@ url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\
 cpes = ["qt:qtbase"]
 
 [qt]
-url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/single/qt-\\E"]
+url_patterns = [
+    "^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/single/qt-\\E",
+    "^https?://download\\.qt\\.io/official_releases/qt/5\\.[^/]+/(5\\.[^/]+)/submodules/(?:qtcharts|qtsvg|qttools)-everywhere-src-\\1\\.tar\\.(?:xz|gz)$",
+]
 cpes = ["qt:qt"]
 
 [qtshadertools]
@@ -113,6 +185,21 @@ url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\
 
 [qtwayland]
 url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtwayland-"]
+
+[qt6charts]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtcharts-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6quick3d]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtquick3d-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6quicktimeline]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtquicktimeline-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6svg]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtsvg-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6tools]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qttools-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
 
 [rmath-julia]
 repositories = ["https://github.com/JuliaStats/Rmath-julia.git"]
@@ -288,6 +375,7 @@ url_patterns = ["^\\Qhttps://developer.download.nvidia.com/compute/cutensor/redi
 url_patterns = ["^https?://crosstool-ng\\.org/download/crosstool-ng/crosstool-ng-(\\d[^/]*)\\.tar\\.\\w+$"]
 
 [opencl-clang]
+repositories = ["https://github.com/intel/opencl-clang.git"]
 tag_patterns = [{regex = "^v(\\d+\\.\\d+\\.\\d+-\\d+)$"}]
 
 [spirv-llvm-translator]

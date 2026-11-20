@@ -165,41 +165,11 @@ cpes = ["intel:openmp"]
 [llvm-extra]
 repositories = ['https://github.com/JuliaLLVM/LLVM.jl', 'https://github.com/maleadt/LLVM.jl.git', 'https://github.com/vchuravy/LLVMExtra.git']
 
-# QT is overzealously merged into one package on repology
-[qtbase]
-url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtbase-\\E"]
-cpes = ["qt:qtbase"]
-
 [qt]
 url_patterns = [
-    "^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/single/qt-\\E",
-    "^https?://download\\.qt\\.io/official_releases/qt/5\\.[^/]+/(5\\.[^/]+)/submodules/(?:qtcharts|qtsvg|qttools)-everywhere-src-\\1\\.tar\\.(?:xz|gz)$",
+    "^https?://[^/?#]+/(?:[^/?#]+/)*(?:official_releases|archive)/qt/(?=[56]\\.?\\d+/(([56])\\.(\\d+)\\.\\d+)/)(?:\\2\\.\\3|\\2\\3)/\\1/(?:submodules/qt[a-z0-9]+|single/qt)-everywhere-(?:opensource-)?src-\\1\\.tar\\.(?:xz|gz)$",
 ]
 cpes = ["qt:qt"]
-
-[qtshadertools]
-url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtshadertools-\\E"]
-
-[qtdeclarative]
-url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtdeclarative-\\E"]
-
-[qtwayland]
-url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtwayland-"]
-
-[qt6charts]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtcharts-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6quick3d]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtquick3d-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6quicktimeline]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtquicktimeline-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6svg]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtsvg-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6tools]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qttools-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
 
 [rmath-julia]
 repositories = ["https://github.com/JuliaStats/Rmath-julia.git"]
@@ -237,9 +207,6 @@ url_patterns = ["^https?://(?:download\\.libvirt\\.org|libvirt\\.org/sources)/li
 
 ["python:bokeh"]
 url_patterns = ["^\\Qhttps://files.pythonhosted.org/packages/source/b/bokeh/bokeh-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
-
-[qtgraphs]
-url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtgraphs-\\E"]
 
 # The CLI has its own Repology project; "bitwarden" is the desktop app
 [bitwarden-cli]

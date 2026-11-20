@@ -23,6 +23,7 @@ end
     @test first(gather_links(df,near;minimum_margin=1))[df.url[1]]==("source"=>"1.0")
     @test !haskey(first(gather_links(df,counts;minimum_margin=5)),df.url[1])
     @test_throws ArgumentError gather_links(df,counts;minimum_margin=0)
+    @test_throws ArgumentError gather_links(df,counts;maximum_urls=0)
     @test all(isempty,gather_links(df[1:0,:],counts))
     old=Dict("ftp://example.org/source-1.0.tar.bz2"=>("wrapper"=>"1.0"),"https://old.org/old-2.0.tar.gz"=>("old"=>"2.0"))
     retargeted=retarget_history(old,resolved;downloads=true)
@@ -38,6 +39,37 @@ end
     @test rr==Dict(url=>"source" for url in repos.url)
     df.origversion[1]="unreleased"
     @test !haskey(first(gather_links(df,counts)),df.url[1])
+end
+
+@testset "bundler claims" begin
+    df=fixture()
+    consumer=DataFrame(link_type=fill(Int8(1),4),repo=fill("bundle",4),effname=fill("consumer",4),
+        rawversion=fill("9.0",4),arch=fill(missing,4),origversion=fill("9.0",4),
+        url=[df.url[1],"https://example.org/dependency-2.0.tar.gz","https://example.org/second-dependency-3.0.tar.gz",
+             "https://example.org/consumer-9.0.tar.gz"])
+    counts=Dict("source"=>5,"wrapper"=>1,"other"=>2,"consumer"=>50)
+    combined=vcat(df,consumer)
+    d,_,resolved=gather_links(combined,counts)
+    @test d[df.url[1]]==("source"=>"1.0")
+    @test d[df.url[3]]==("source"=>"1.0")
+    @test resolved[Repology.normalize_url(df.url[1])]=="source"
+    @test !haskey(d,consumer.url[2])
+    @test !haskey(d,consumer.url[3])
+    @test !haskey(d,consumer.url[4])
+    @test all(isempty,gather_links(consumer,counts))
+    @test haskey(last(gather_links(combined,counts;maximum_urls=4)),Repology.normalize_url(df.url[1]))
+    @test last(gather_links(combined,counts;maximum_urls=4))[Repology.normalize_url(df.url[1])]=="consumer"
+    @test last(gather_links(combined,counts;maximum_urls=1))[Repology.normalize_url(df.url[1])]=="wrapper"
+    only_source=combined[[1,2,5,6,7,8],:]
+    @test first(gather_links(only_source,counts))[df.url[1]]==("source"=>"1.0")
+    @test all(isempty,gather_links(df[[1,2],:],counts))
+    extra=df[[1],:]
+    extra.url[1]="https://example.org/source-doc-1.0.tar.gz"
+    three_urls=vcat(df,extra)
+    @test first(gather_links(three_urls,counts))[df.url[1]]==("source"=>"1.0")
+    @test last(gather_links(three_urls,counts;maximum_urls=2))[Repology.normalize_url(df.url[1])]=="wrapper"
+    old=Dict("ftp://example.org/source-1.0.tar.bz2"=>("wrapper"=>"1.0"))
+    @test retarget_history(old,resolved;downloads=true)[only(keys(old))]==("source"=>"1.0")
 end
 
 @testset "whole-dump family counts" begin

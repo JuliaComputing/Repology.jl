@@ -18,7 +18,7 @@ end
 
 @testset "identify provenance" begin
     @test identify("https://github.com/libexpat/libexpat/releases/download/R_2_8_3/expat-2.8.3.tar.xz") == Identification("expat", "2.8.3", "url-pattern")
-    @test identify("https://zlib.net/zlib-1.2.11.tar.gz") == Identification("zlib", "1.2.11", "repology-url")
+    @test identify("https://zlib.net/zlib-1.2.11.tar.gz") == Identification("zlib", "1.2.11", "url-pattern")
     @test identify("https://github.com/libexpat/libexpat/releases/download/R_2_9_0/expat-2.9.0.tar.xz").version == "2.9.0"
     @test identify("https://github.com/wolfSSL/wolfssl/archive/refs/tags/v5.9.3-stable.tar.gz") == Identification("wolfssl", "5.9.3", "tag-scheme")
     @test identify("https://github.com/postgres/postgres/archive/refs/tags/REL_16_9.tar.gz") == Identification("postgresql", "16.9", "tag-scheme")
@@ -89,6 +89,37 @@ end
     for url in ("", "https://ftp.gnu.org/gnu/mpc/mpc-1.3.1.tar.gz.sig",
                 "https://download.qt.io/official_releases/qt/6.10/6.10.2/submodules/qtsvg-everywhere-src-6.10.1.tar.xz",
                 "https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.2/libclc-19.1.2.src.tar.xz")
+        @test !any(p -> occursin(first(p), url), Repology.curated_url_patterns())
+    end
+end
+
+@testset "curated upstream ownership" begin
+    for (url, project) in (("https://github.com/dankamongmen/notcurses", "notcurses"),
+                           ("https://github.com/google/s2geometry.git", "s2geometry"),
+                           ("https://github.com/apache/arrow-nanoarrow", "nanoarrow"),
+                           ("https://github.com/ROCm/llvm-project", "rocm-llvm"))
+        @test Repology.repository_projects(url) == [project]
+    end
+    for (url, project, version) in (
+        ("https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/mingw-w64-v11.0.1.tar.bz2", "mingw-w64", "11.0.1"),
+        ("https://github.com/dankamongmen/notcurses/archive/refs/tags/v3.0.17.tar.gz", "notcurses", "3.0.17"),
+        ("https://github.com/google/s2geometry/archive/refs/tags/v0.12.0.tar.gz", "s2geometry", "0.12.0"),
+        ("https://github.com/apache/arrow-nanoarrow/archive/refs/tags/apache-arrow-nanoarrow-0.6.0.tar.gz", "nanoarrow", "0.6.0"),
+        ("https://github.com/indygreg/PyOxidizer/archive/refs/tags/apple-codesign/0.17.0.tar.gz", "rust:apple-codesign", "0.17.0"),
+        ("https://github.com/samtools/htslib/releases/download/1.10.2/htslib-1.10.2.tar.bz2", "htslib", "1.10.2"),
+        ("https://s3.amazonaws.com/json-c_releases/releases/json-c-0.17.tar.gz", "json-c", "0.17"),
+        ("https://github.com/openssl/openssl/releases/download/openssl-3.0.15/openssl-3.0.15.tar.gz", "openssl", "3.0.15"),
+        ("https://github.com/openPMD/openPMD-api/archive/refs/tags/0.13.4.tar.gz", "openpmd-api", "0.13.4"),
+        ("https://tukaani.org/xz/xz-5.4.3.tar.xz", "xz", "5.4.3"),
+        ("https://zlib.net/zlib-1.2.12.tar.gz", "zlib", "1.2.12"))
+        @test identify(url) == Identification(project, version, "url-pattern")
+    end
+    @test Repology.version_from_tag("rocm-llvm", "rocm-7.2.0") == "7.2.0"
+    @test Repology.version_from_tag("nanoarrow", "apache-arrow-nanoarrow-0.6.0") == "0.6.0"
+    for url in ("", "https://github.com/other/s2geometry/archive/v0.12.0.tar.gz",
+                "https://zlib.net/zlib-1.2.12.tar.gz.asc",
+                "https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/mingw-w64-v11.0.1.tar.bz2.sig",
+                "https://github.com/openssl/openssl/releases/download/openssl-3.0.15/openssl-3.0.16.tar.gz")
         @test !any(p -> occursin(first(p), url), Repology.curated_url_patterns())
     end
 end

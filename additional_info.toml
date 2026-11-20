@@ -81,6 +81,51 @@ url_patterns = ["^\\Qhttps://github.com/msgpack/msgpack-c/releases/download/c-\\
 [mpg123]
 url_patterns = ["^https?://downloads\\.sourceforge\\.net/(?:sourceforge/)?mpg123/mpg123-(\\d[^/]*)\\.tar\\.(?:gz|bz2|xz)$"]
 
+[mingw-w64]
+url_patterns = ["^https?://sourceforge\\.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/mingw-w64-v(\\d[^/]*)\\.tar\\.(?:bz2|gz|xz)(?:/download)?$"]
+
+[notcurses]
+repositories = ["https://github.com/dankamongmen/notcurses.git"]
+url_patterns = ["^https://github\\.com/dankamongmen/notcurses/archive/(?:refs/tags/)?v?(\\d[^/]*)\\.tar\\.gz$"]
+
+[s2geometry]
+repositories = ["https://github.com/google/s2geometry.git"]
+url_patterns = ["^https://github\\.com/google/s2geometry/archive/(?:refs/tags/)?v?(\\d[^/]*)\\.tar\\.gz$"]
+
+[nanoarrow]
+repositories = ["https://github.com/apache/arrow-nanoarrow.git"]
+tag_patterns = [{regex = "^apache-arrow-nanoarrow-(\\d[^/]*)$"}]
+url_patterns = ["^https://github\\.com/apache/arrow-nanoarrow/archive/(?:refs/tags/)?(?:apache-arrow-nanoarrow-)?v?(\\d[^/]*)\\.tar\\.gz$"]
+
+[rocm-llvm]
+repositories = ["https://github.com/ROCm/llvm-project.git"]
+tag_patterns = [{regex = "^rocm-(\\d+\\.\\d+\\.\\d+)$"}]
+
+["rust:apple-codesign"]
+url_patterns = ["^https://github\\.com/indygreg/(?:PyOxidizer|apple-platform-rs)/archive/(?:refs/tags/)?apple-codesign/(\\d[^/]*)\\.tar\\.gz$"]
+
+[htslib]
+repositories = ["https://github.com/samtools/htslib.git"]
+url_patterns = ["^https://github\\.com/samtools/htslib/releases/download/(\\d[^/]*)/htslib-\\1\\.tar\\.(?:bz2|gz|xz)$"]
+
+[json-c]
+repositories = ["https://github.com/json-c/json-c.git"]
+url_patterns = ["^https://s3\\.amazonaws\\.com/json-c_releases/releases/json-c-(\\d[^/]*)\\.tar\\.(?:gz|xz)$"]
+
+[openssl]
+repositories = ["https://github.com/openssl/openssl.git"]
+url_patterns = ["^https://github\\.com/openssl/openssl/releases/download/openssl-(\\d[^/]*)/openssl-\\1\\.tar\\.gz$", "^https?://(?:www\\.)?openssl\\.org/source/(?:old/[^/]+/)?openssl-(\\d[^/]*)\\.tar\\.gz$"]
+
+[openpmd-api]
+repositories = ["https://github.com/openPMD/openPMD-api.git"]
+url_patterns = ["^https://github\\.com/openPMD/openPMD-api/archive/(?:refs/tags/)?v?(\\d[^/]*)\\.tar\\.gz$"]
+
+[xz]
+url_patterns = ["^https?://(?:www\\.)?tukaani\\.org/xz/xz-(\\d[^/]*)\\.tar\\.(?:xz|bz2|gz)$"]
+
+[zlib]
+url_patterns = ["^https?://(?:www\\.)?zlib\\.net/(?:fossils/)?zlib-(\\d[^/]*)\\.tar\\.(?:gz|xz|bz2)$"]
+
 [llvm]
 url_patterns = ["^\\Qhttps://github.com/llvm/llvm-project/releases/download/llvmorg-\\E(\\d[^/]*)/(?:libclc|clang)-\\1\\.src\\.tar\\.(?:xz|gz)$"]
 

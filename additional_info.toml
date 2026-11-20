@@ -13,6 +13,12 @@
 [ampl-asl]
 url_patterns = ["^\\Qhttp://netlib.org/ampl/solvers.tgz\\E()$"] # No versioning info available
 
+[binutils]
+url_patterns = ["^https?://(?:ftp\\.gnu\\.org|ftpmirror\\.gnu\\.org)/(?:(?:pub/)?gnu/)?binutils/binutils-(\\d[^/]*)\\.tar\\.(?:gz|bz2|xz|lz)$"]
+
+[deno]
+url_patterns = ["^\\Qhttps://github.com/denoland/deno/releases/download/v\\E(\\d[^/]*)/deno-[^/]+\\.zip$"]
+
 [epoll-shim]
 repositories = ["https://github.com/jiixyj/epoll-shim.git"]
 
@@ -48,6 +54,9 @@ repositories = ["https://github.com/JuliaLinearAlgebra/libblastrampoline.git", "
 [libevdev]
 repositories = ["https://gitlab.freedesktop.org/libevdev/libevdev"]
 
+[libiconv]
+url_patterns = ["^https?://(?:ftp\\.gnu\\.org|ftpmirror\\.gnu\\.org)/(?:(?:pub/)?gnu/)?libiconv/libiconv-(\\d[^/]*)\\.tar\\.(?:gz|bz2|xz|lz)$"]
+
 [libpng]
 url_patterns = [
     "^\\Qhttps://sourceforge.net/projects/libpng/files/libpng\\E\\d+/([^/]+)/",
@@ -66,9 +75,15 @@ repositories = ["https://github.com/ARMmbed/mbedtls.git"]
 # Repology splits these release tarballs between msgpack and msgpack-c
 url_patterns = ["^\\Qhttps://github.com/msgpack/msgpack-c/releases/download/c-\\E(\\d[^/]*)\\Q/msgpack-c-\\E\\1\\Q.tar.gz\\E$"]
 
+[nodejs]
+url_patterns = ["^https?://(?:www\\.)?nodejs\\.org/(?:dist|download/release)/v(\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?)/node-v\\1(?:-[^/]+)?\\.(?:tar\\.(?:gz|xz)|zip|7z)$"]
+
 [openspecfun]
 repositories = ["https://github.com/JuliaMath/openspecfun.git"]
 url_patterns = ["^\\Qhttps://github.com/JuliaMath/openspecfun/archive/v\\E(\\d.*)\\Q.tar.gz\\E$"]
+
+[python]
+url_patterns = ["^https?://(?:www\\.)?python\\.org/ftp/python/[^/]+/Python-(\\d[^/]*)\\.tar\\.(?:xz|gz)$"]
 
 [suitesparse]
 repositories = ["https://github.com/DrTimothyAldenDavis/SuiteSparse.git", "https://github.com/Wimmerer/SuiteSparse.git"]

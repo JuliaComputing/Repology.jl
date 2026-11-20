@@ -40,6 +40,34 @@ end
     @test Repology.version_from_tag("sdl3", "release-3.2.0") == "3.2.0"
 end
 
+@testset "handwritten source regressions" begin
+    @test identify("https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz") == Identification("libiconv", "1.18", "url-pattern")
+    @test identify("https://github.com/git-for-windows/git/releases/download/v2.42.0.windows.2/Git-2.42.0.2-32-bit.tar.bz2") == Identification("git-for-windows", "2.42.0.windows.2", "url-pattern")
+end
+
+@testset "GNU mirror archives" begin
+    for (project, version) in (("binutils", "2.41"), ("libiconv", "1.16")),
+        prefix in ("https://ftp.gnu.org/gnu/", "https://ftp.gnu.org/pub/gnu/",
+                   "https://ftpmirror.gnu.org/gnu/", "https://ftpmirror.gnu.org/"),
+        compression in ("gz", "bz2", "xz", "lz")
+        url = prefix * project * "/" * project * "-" * version * ".tar." * compression
+        @test identify(url) == Identification(project, version, "url-pattern")
+    end
+end
+
+@testset "canonical source URL boundaries" begin
+    patterns = Repology.curated_url_patterns()
+    for url in ("", "https://example.invalid/Python-3.11.12.tar.xz",
+                "https://www.python.org/ftp/python/3.11.12/Python-3.11.12.tar.xz.asc",
+                "https://nodejs.org/dist/v16.0.0/node-v18.0.0-linux-x64.tar.gz",
+                "https://nodejs.org/dist/v16.0.0/SHASUMS256.txt",
+                "https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.xz.sig",
+                "https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.16.tar.gz.sig",
+                "https://github.com/denoland/deno/releases/download/v2.9.8/deno.zip.sha256sum")
+        @test !any(p -> occursin(first(p), url), patterns)
+    end
+end
+
 @testset "tag parsing" begin
     for (tag, ver) in ("R_2_8_3" => "2.8.3", "REL_16_9" => "16.9", "V_9_2_P1" => "9.2p1", "v5.9.3-stable" => "5.9.3",
                        "Release_2022_09_1" => "2022.09.1", "PCRE2-10.42" => "10.42", "openssl-3.5.8" => "3.5.8",

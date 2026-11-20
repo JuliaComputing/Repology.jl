@@ -40,6 +40,16 @@ end
     @test Repology.version_from_tag("sdl3", "release-3.2.0") == "3.2.0"
 end
 
+@testset "GNU mirror archives" begin
+    for (project, version) in (("binutils", "2.41"), ("libiconv", "1.16")),
+        prefix in ("https://ftp.gnu.org/gnu/", "https://ftp.gnu.org/pub/gnu/",
+                   "https://ftpmirror.gnu.org/gnu/", "https://ftpmirror.gnu.org/"),
+        compression in ("gz", "bz2", "xz", "lz")
+        url = prefix * project * "/" * project * "-" * version * ".tar." * compression
+        @test identify(url) == Identification(project, version, "url-pattern")
+    end
+end
+
 @testset "canonical source URL boundaries" begin
     patterns = Repology.curated_url_patterns()
     for url in ("", "https://example.invalid/Python-3.11.12.tar.xz",

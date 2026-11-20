@@ -14,7 +14,7 @@
 url_patterns = ["^\\Qhttp://netlib.org/ampl/solvers.tgz\\E()$"] # No versioning info available
 
 [binutils]
-url_patterns = ["^https?://(?:ftp\\.gnu\\.org|ftpmirror\\.gnu\\.org)/(?:pub/)?gnu/binutils/binutils-(\\d[^/]*)\\.tar\\.(?:gz|bz2|xz)$"]
+url_patterns = ["^https?://(?:ftp\\.gnu\\.org|ftpmirror\\.gnu\\.org)/(?:(?:pub/)?gnu/)?binutils/binutils-(\\d[^/]*)\\.tar\\.(?:gz|bz2|xz|lz)$"]
 
 [deno]
 url_patterns = ["^\\Qhttps://github.com/denoland/deno/releases/download/v\\E(\\d[^/]*)/deno-[^/]+\\.zip$"]
@@ -55,7 +55,7 @@ repositories = ["https://github.com/JuliaLinearAlgebra/libblastrampoline.git", "
 repositories = ["https://gitlab.freedesktop.org/libevdev/libevdev"]
 
 [libiconv]
-url_patterns = ["^https?://(?:ftp\\.gnu\\.org|ftpmirror\\.gnu\\.org)/(?:pub/)?gnu/libiconv/libiconv-(\\d[^/]*)\\.tar\\.(?:gz|bz2|xz)$"]
+url_patterns = ["^https?://(?:ftp\\.gnu\\.org|ftpmirror\\.gnu\\.org)/(?:(?:pub/)?gnu/)?libiconv/libiconv-(\\d[^/]*)\\.tar\\.(?:gz|bz2|xz|lz)$"]
 
 [libpng]
 url_patterns = [

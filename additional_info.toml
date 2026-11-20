@@ -178,13 +178,79 @@ url_patterns = [
 cpes = ["qt:qt"]
 
 [qtshadertools]
-url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtshadertools-\\E"]
+url_patterns = [
+    "^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtshadertools-everywhere-src-\\1\\.tar\\.(?:xz|gz)$",
+    "^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtshadertools-\\E",
+]
 
 [qtdeclarative]
-url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtdeclarative-\\E"]
+url_patterns = [
+    "^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtdeclarative-everywhere-src-\\1\\.tar\\.(?:xz|gz)$",
+    "^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtdeclarative-\\E",
+]
 
 [qtwayland]
-url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtwayland-"]
+url_patterns = [
+    "^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtwayland-everywhere-src-\\1\\.tar\\.(?:xz|gz)$",
+    "^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtwayland-",
+]
+
+[qt63d]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qt3d-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6connectivity]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtconnectivity-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6datavis3d]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtdatavis3d-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6imageformats]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtimageformats-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6location]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtlocation-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6multimedia]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtmultimedia-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6networkauth]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtnetworkauth-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6positioning]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtpositioning-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6remoteobjects]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtremoteobjects-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6scxml]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtscxml-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6sensors]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtsensors-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6serialbus]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtserialbus-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6serialport]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtserialport-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6speech]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtspeech-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6translations]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qttranslations-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6virtualkeyboard]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtvirtualkeyboard-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6webchannel]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtwebchannel-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6websockets]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtwebsockets-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6webview]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtwebview-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
 
 [qt6charts]
 url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtcharts-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]

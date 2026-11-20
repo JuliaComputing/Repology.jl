@@ -114,6 +114,31 @@ end
     end
 end
 
+@testset "Qt6 submodule components" begin
+    components=(("qt3d","qt63d"),("qtconnectivity","qt6connectivity"),("qtdatavis3d","qt6datavis3d"),
+        ("qtdeclarative","qtdeclarative"),("qtimageformats","qt6imageformats"),("qtlocation","qt6location"),
+        ("qtmultimedia","qt6multimedia"),("qtnetworkauth","qt6networkauth"),("qtpositioning","qt6positioning"),
+        ("qtremoteobjects","qt6remoteobjects"),("qtscxml","qt6scxml"),("qtsensors","qt6sensors"),
+        ("qtserialbus","qt6serialbus"),("qtserialport","qt6serialport"),("qtshadertools","qtshadertools"),
+        ("qtspeech","qt6speech"),("qttranslations","qt6translations"),("qtvirtualkeyboard","qt6virtualkeyboard"),
+        ("qtwayland","qtwayland"),("qtwebchannel","qt6webchannel"),("qtwebsockets","qt6websockets"),("qtwebview","qt6webview"))
+    patterns=Repology.curated_url_patterns()
+    for (component,project) in components
+        for scheme in ("http","https"), extension in ("xz","gz")
+            url="$scheme://download.qt.io/official_releases/qt/6.12/6.12.0/submodules/$component-everywhere-src-6.12.0.tar.$extension"
+            @test identify(url)==Identification(project,"6.12.0","url-pattern")
+        end
+        base="http://download.qt.io/official_releases/qt/6.12/6.12.0/submodules/$component-everywhere-src-"
+        for suffix in ("6.12.1.tar.xz","5.15.2.tar.xz","6.12.0.tar.xz.asc")
+            @test !any(p->occursin(first(p),base*suffix),patterns)
+        end
+    end
+    for url in ("", "http://example.invalid/qt3d-everywhere-src-6.12.0.tar.xz",
+                "http://download.qt.io/official_releases/qt/5.15/5.15.2/submodules/qt3d-everywhere-src-5.15.2.tar.xz")
+        @test !any(p->occursin(first(p),url),patterns)
+    end
+end
+
 @testset "curated upstream ownership" begin
     for (url, project) in (("https://github.com/dankamongmen/notcurses", "notcurses"),
                            ("https://github.com/google/s2geometry.git", "s2geometry"),

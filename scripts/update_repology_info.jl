@@ -64,8 +64,9 @@ function read_dump(io)
     return df, pkg_cpes, manual_cpes, Dict(p => length(fs) for (p, fs) in project_families)
 end
 
-function gather_links(df, family_counts; minimum_margin=2)
+function gather_links(df, family_counts; minimum_margin=2, maximum_urls=3)
     minimum_margin >= 1 || throw(ArgumentError("minimum_margin must be positive"))
+    maximum_urls >= 1 || throw(ArgumentError("maximum_urls must be positive"))
     # Uncontested URLs still require a single source URL per package.
     counted_df = df |>
         x -> groupby(x, [:repo, :effname, :rawversion, :arch]) |>
@@ -75,12 +76,14 @@ function gather_links(df, family_counts; minimum_margin=2)
     downloads = Dict{String, Pair{String,String}}()
     resolved = Dict{String,String}()
     for group in groupby(counted_df, :normalized_url)
-        projects = unique(group.effname)
+        contested = length(unique(group.effname)) > 1
+        eligible = filter(row -> row.n_unique_urls <= maximum_urls, group)
+        isempty(eligible) && continue
+        projects = unique(eligible.effname)
         sort!(projects; by=p -> (-family_counts[p], p))
-        contested = length(projects) > 1
-        contested && family_counts[projects[1]] - family_counts[projects[2]] < minimum_margin && continue
+        length(projects) > 1 && family_counts[projects[1]] - family_counts[projects[2]] < minimum_margin && continue
         project = first(projects)
-        rows = filter(row -> row.effname == project && (contested || row.n_unique_urls == 1), group)
+        rows = filter(row -> row.effname == project && (contested || row.n_unique_urls == 1), eligible)
         isempty(rows) && continue
         normalized = first(group.normalized_url)
         resolved[normalized] = project

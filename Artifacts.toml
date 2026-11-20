@@ -1,6 +1,6 @@
 [repology_data]
-git-tree-sha1 = "33349945d5f48700b0b9941fd2674ee49a9dab8c"
+git-tree-sha1 = "a7b3e1d4f2bbd9cf28500fb672d4868032e343ae"
 
     [[repology_data.download]]
-    sha256 = "58736285a3784828a8e2312263cac55c47de02a072d3a4e896ed6918b66e366d"
-    url = "https://github.com/JuliaPackaging/Repology.jl/releases/download/data-2026-11-18/repology_data-58736285a3784828a8e2312263cac55c47de02a072d3a4e896ed6918b66e366d.tar.gz"
+    sha256 = "64022e3698492e2e232aa003917c1634965a13b213a5f40900a549c11099eaaa"
+    url = "https://github.com/JuliaPackaging/Repology.jl/releases/download/data-2026-11-20-44808591219/repology_data-64022e3698492e2e232aa003917c1634965a13b213a5f40900a549c11099eaaa.tar.gz"

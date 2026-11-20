@@ -165,107 +165,11 @@ cpes = ["intel:openmp"]
 [llvm-extra]
 repositories = ['https://github.com/JuliaLLVM/LLVM.jl', 'https://github.com/maleadt/LLVM.jl.git', 'https://github.com/vchuravy/LLVMExtra.git']
 
-# QT is overzealously merged into one package on repology
-[qtbase]
-url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtbase-\\E"]
-cpes = ["qt:qtbase"]
-
 [qt]
 url_patterns = [
-    "^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/single/qt-\\E",
-    "^https?://download\\.qt\\.io/official_releases/qt/5\\.[^/]+/(5\\.[^/]+)/submodules/(?:qtcharts|qtsvg|qttools)-everywhere-src-\\1\\.tar\\.(?:xz|gz)$",
+    "^https?://[^/?#]+/(?:[^/?#]+/)*(?:official_releases|archive)/qt/(?=[56]\\.?\\d+/(([56])\\.(\\d+)\\.\\d+)/)(?:\\2\\.\\3|\\2\\3)/\\1/(?:submodules/qt[a-z0-9]+|single/qt)-everywhere-(?:opensource-)?src-\\1\\.tar\\.(?:xz|gz)$",
 ]
 cpes = ["qt:qt"]
-
-[qtshadertools]
-url_patterns = [
-    "^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtshadertools-everywhere-src-\\1\\.tar\\.(?:xz|gz)$",
-    "^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtshadertools-\\E",
-]
-
-[qtdeclarative]
-url_patterns = [
-    "^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtdeclarative-everywhere-src-\\1\\.tar\\.(?:xz|gz)$",
-    "^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtdeclarative-\\E",
-]
-
-[qtwayland]
-url_patterns = [
-    "^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtwayland-everywhere-src-\\1\\.tar\\.(?:xz|gz)$",
-    "^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtwayland-",
-]
-
-[qt63d]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qt3d-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6connectivity]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtconnectivity-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6datavis3d]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtdatavis3d-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6imageformats]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtimageformats-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6location]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtlocation-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6multimedia]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtmultimedia-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6networkauth]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtnetworkauth-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6positioning]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtpositioning-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6remoteobjects]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtremoteobjects-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6scxml]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtscxml-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6sensors]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtsensors-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6serialbus]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtserialbus-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6serialport]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtserialport-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6speech]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtspeech-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6translations]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qttranslations-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6virtualkeyboard]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtvirtualkeyboard-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6webchannel]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtwebchannel-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6websockets]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtwebsockets-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6webview]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtwebview-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6charts]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtcharts-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6quick3d]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtquick3d-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6quicktimeline]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtquicktimeline-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6svg]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtsvg-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
-
-[qt6tools]
-url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qttools-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
 
 [rmath-julia]
 repositories = ["https://github.com/JuliaStats/Rmath-julia.git"]
@@ -303,9 +207,6 @@ url_patterns = ["^https?://(?:download\\.libvirt\\.org|libvirt\\.org/sources)/li
 
 ["python:bokeh"]
 url_patterns = ["^\\Qhttps://files.pythonhosted.org/packages/source/b/bokeh/bokeh-\\E(\\d[^/]*)\\Q.tar.gz\\E$"]
-
-[qtgraphs]
-url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtgraphs-\\E"]
 
 # The CLI has its own Repology project; "bitwarden" is the desktop app
 [bitwarden-cli]

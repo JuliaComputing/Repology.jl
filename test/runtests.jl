@@ -70,6 +70,29 @@ end
     end
 end
 
+@testset "curated export regressions" begin
+    @test Repology.repository_projects("https://github.com/intel/opencl-clang") == ["opencl-clang"]
+    for (url, project, version) in (
+        ("https://ftp.gnu.org/gnu/mpc/mpc-1.3.1.tar.gz", "gnumpc", "1.3.1"),
+        ("https://ftpmirror.gnu.org/mpc/mpc-1.3.1.tar.lz", "gnumpc", "1.3.1"),
+        ("https://downloads.sourceforge.net/sourceforge/mpg123/mpg123-1.29.3.tar.bz2", "mpg123", "1.29.3"),
+        ("https://downloads.sourceforge.net/sourceforge/mpg123/mpg123-1.33.7.tar.bz2", "mpg123", "1.33.7"),
+        ("https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.2/libclc-20.1.2.src.tar.xz", "llvm", "20.1.2"),
+        ("https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.2/clang-20.1.2.src.tar.xz", "llvm", "20.1.2"))
+        @test identify(url) == Identification(project, version, "url-pattern")
+    end
+    for (module_name, project) in (("qtcharts", "qt6charts"), ("qtquick3d", "qt6quick3d"),
+                                  ("qtquicktimeline", "qt6quicktimeline"), ("qtsvg", "qt6svg"), ("qttools", "qt6tools"))
+        url = "https://download.qt.io/official_releases/qt/6.10/6.10.2/submodules/$module_name-everywhere-src-6.10.2.tar.xz"
+        @test identify(url) == Identification(project, "6.10.2", "url-pattern")
+    end
+    for url in ("", "https://ftp.gnu.org/gnu/mpc/mpc-1.3.1.tar.gz.sig",
+                "https://download.qt.io/official_releases/qt/6.10/6.10.2/submodules/qtsvg-everywhere-src-6.10.1.tar.xz",
+                "https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.2/libclc-19.1.2.src.tar.xz")
+        @test !any(p -> occursin(first(p), url), Repology.curated_url_patterns())
+    end
+end
+
 @testset "tag parsing" begin
     for (tag, ver) in ("R_2_8_3" => "2.8.3", "REL_16_9" => "16.9", "V_9_2_P1" => "9.2p1", "v5.9.3-stable" => "5.9.3",
                        "Release_2022_09_1" => "2022.09.1", "PCRE2-10.42" => "10.42", "openssl-3.5.8" => "3.5.8",

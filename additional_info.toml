@@ -28,6 +28,9 @@ url_patterns = ["^\\Qhttps://github.com/libexpat/libexpat/releases/download/R\\E
 [fftw]
 url_patterns = ["^\\Qhttp://fftw.org/~stevenj/fftw-\\E(\\d.*)\\Q.tar.gz\\E$"]
 
+[gnumpc]
+url_patterns = ["^https?://(?:ftp\\.gnu\\.org|ftpmirror\\.gnu\\.org)/(?:(?:pub/)?gnu/)?mpc/mpc-(\\d[^/]*)\\.tar\\.(?:gz|bz2|xz|lz)$"]
+
 [gr]
 repositories = ["https://github.com/sciapp/gr.git"]
 
@@ -74,6 +77,12 @@ repositories = ["https://github.com/ARMmbed/mbedtls.git"]
 [msgpack-c]
 # Repology splits these release tarballs between msgpack and msgpack-c
 url_patterns = ["^\\Qhttps://github.com/msgpack/msgpack-c/releases/download/c-\\E(\\d[^/]*)\\Q/msgpack-c-\\E\\1\\Q.tar.gz\\E$"]
+
+[mpg123]
+url_patterns = ["^https?://downloads\\.sourceforge\\.net/(?:sourceforge/)?mpg123/mpg123-(\\d[^/]*)\\.tar\\.(?:gz|bz2|xz)$"]
+
+[llvm]
+url_patterns = ["^\\Qhttps://github.com/llvm/llvm-project/releases/download/llvmorg-\\E(\\d[^/]*)/(?:libclc|clang)-\\1\\.src\\.tar\\.(?:xz|gz)$"]
 
 [nodejs]
 url_patterns = ["^https?://(?:www\\.)?nodejs\\.org/(?:dist|download/release)/v(\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?)/node-v\\1(?:-[^/]+)?\\.(?:tar\\.(?:gz|xz)|zip|7z)$"]
@@ -128,6 +137,21 @@ url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\
 
 [qtwayland]
 url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/submodules/qtwayland-"]
+
+[qt6charts]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtcharts-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6quick3d]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtquick3d-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6quicktimeline]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtquicktimeline-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6svg]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qtsvg-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
+
+[qt6tools]
+url_patterns = ["^https?://download\\.qt\\.io/official_releases/qt/6\\.[^/]+/(6\\.[^/]+)/submodules/qttools-everywhere-src-\\1\\.tar\\.(?:xz|gz)$"]
 
 [rmath-julia]
 repositories = ["https://github.com/JuliaStats/Rmath-julia.git"]
@@ -303,6 +327,7 @@ url_patterns = ["^\\Qhttps://developer.download.nvidia.com/compute/cutensor/redi
 url_patterns = ["^https?://crosstool-ng\\.org/download/crosstool-ng/crosstool-ng-(\\d[^/]*)\\.tar\\.\\w+$"]
 
 [opencl-clang]
+repositories = ["https://github.com/intel/opencl-clang.git"]
 tag_patterns = [{regex = "^v(\\d+\\.\\d+\\.\\d+-\\d+)$"}]
 
 [spirv-llvm-translator]

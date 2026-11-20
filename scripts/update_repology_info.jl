@@ -16,8 +16,9 @@ avoids restoring the full dump (tens of GB) into PostgreSQL.
 """
 function read_dump(io)
     links = Dict{Int32,String}()
-    pkgs = (link_type=Int8[], link_id=Int32[], repo=String[], effname=String[], rawversion=String[],
-        arch=Union{String,Missing}[], origversion=String[])
+    pkgs = (link_type=Int8[], link_id=Int32[], repo=String[], family=String[], effname=String[],
+        srcname=Union{String,Missing}[], binname=Union{String,Missing}[], visiblename=Union{String,Missing}[],
+        multiple_urls=Bool[], rawversion=String[], arch=Union{String,Missing}[], origversion=String[])
     pkg_cpes = Set{Tuple{String,String}}()
     manual_cpes = Tuple{String,String}[]
     intern = Dict{String,String}()
@@ -40,15 +41,23 @@ function read_dump(io)
             vendor, product = copy_value(f[cols["cpe_vendor"]]), copy_value(f[cols["cpe_product"]])
             !ismissing(vendor) && !ismissing(product) && push!(pkg_cpes, (effname, "$vendor:$product"))
             repo = get!(intern, f[cols["repo"]], f[cols["repo"]])
+            family = get!(intern, f[cols["family"]], f[cols["family"]])
+            names = map(("srcname", "binname", "visiblename")) do field
+                value = copy_value(f[cols[field]])
+                ismissing(value) ? missing : get!(intern, value, value)
+            end
             arch = copy_value(f[cols["arch"]])
             arch = ismissing(arch) ? missing : get!(intern, arch, arch)
             rawversion, origversion = copy_value(f[cols["rawversion"]]), copy_value(f[cols["origversion"]])
-            for m in eachmatch(r"\[(\d+), (\d+)", f[cols["links"]])
-                t = parse(Int8, m.captures[1])
-                t in (1, 2) || continue
-                push!(pkgs.link_type, t); push!(pkgs.link_id, parse(Int32, m.captures[2]))
+            source_links = [(parse(Int8, m.captures[1]), parse(Int32, m.captures[2]))
+                for m in eachmatch(r"\[(\d+), (\d+)", f[cols["links"]]) if m.captures[1] in ("1", "2")]
+            multiple_urls = length(unique(last.(source_links))) > 1
+            for (t, id) in source_links
+                push!(pkgs.link_type, t); push!(pkgs.link_id, id)
                 push!(pkgs.repo, repo); push!(pkgs.effname, effname); push!(pkgs.rawversion, rawversion)
                 push!(pkgs.arch, arch); push!(pkgs.origversion, origversion)
+                push!(pkgs.family, family); push!(pkgs.srcname, names[1]); push!(pkgs.binname, names[2])
+                push!(pkgs.visiblename, names[3]); push!(pkgs.multiple_urls, multiple_urls)
             end
         elseif table == "manual_cpes"
             vendor, product = copy_value(f[cols["cpe_vendor"]]), copy_value(f[cols["cpe_product"]])
@@ -61,51 +70,92 @@ function read_dump(io)
     return df, pkg_cpes, manual_cpes
 end
 
-function gather_links(df)
-    # We'll only trust download URLs when only one was used for the given package
-    # Many packages have more than one download, but then we don't know if that was a (build) dependency
-    # or the actual project or perhaps some larger meta-project that vendors lots of deps.
-    filtered_df = df |>
-        x -> groupby(x, [:repo, :effname, :rawversion, :arch]) |>
-        x -> transform(x, :url => (x -> length(unique(x))) => :n_unique_urls) |>
-        x -> filter(row -> row.n_unique_urls == 1, x) |>
-        # And also remove any rows for which the same URL points at two different effnames:
-        x -> groupby(x, :url) |>
-        x -> transform(x, :effname => (x -> length(unique(x))) => :n_unique_effnames) |>
-        x -> filter(row -> row.n_unique_effnames == 1, x)
+source_name(s) = replace(lowercase(s), r"[^a-z0-9]" => "")
 
-    # For repositories (link_type == 2), ignore versions
+function basename_agrees(url, srcname, version)
+    ismissing(srcname) && return false
+    base = last(split(Repology.normalize_url(url), '/'))
+    if !isempty(version)
+        idx = findfirst(lowercase(version), base)
+        isnothing(idx) || (base = base[1:prevind(base, first(idx))])
+    end
+    base = replace(base, r"[-_.]v?$" => "")
+    return !isempty(base) && source_name(base) == source_name(last(split(srcname, '/')))
+end
+
+function resolve_claimants(df, rows; singleton_support=false)
+    support = Dict{String,Set{String}}()
+    for i in rows
+        families = get!(Set{String}, support, df.effname[i])
+        singleton_support && df.multiple_urls[i] && continue
+        push!(families, df.family[i])
+    end
+    greatest = maximum(length, values(support))
+    greatest == 0 && return nothing, support
+    best = sort!([p for (p, families) in support if length(families) == greatest])
+    length(best) == 1 && return only(best), support
+    matches = [p for p in best if any(i -> df.effname[i] == p &&
+        (!singleton_support || !df.multiple_urls[i]) &&
+        basename_agrees(df.url[i], df.srcname[i], df.link_type[i] == 1 ? df.origversion[i] : ""), rows)]
+    return length(matches) == 1 ? only(matches) : nothing, support
+end
+
+function write_ambiguity(io, df, rows, url, reason)
+    isnothing(io) && return
+    claimants = [Dict{String,Any}("project" => df.effname[i], "repo" => df.repo[i],
+        "family" => df.family[i], "url" => df.url[i], "version" => df.origversion[i],
+        "srcname" => coalesce(df.srcname[i], ""), "binname" => coalesce(df.binname[i], ""),
+        "visiblename" => coalesce(df.visiblename[i], ""), "multiple_urls" => df.multiple_urls[i]) for i in rows]
+    TOML.print(io, Dict("ambiguous" => [Dict("url" => url, "link_types" => sort!(unique(df.link_type[rows])),
+        "reason" => reason, "claimants" => claimants)]); sorted=true)
+end
+
+function gather_links(df; singleton_support=false, diagnostics=nothing)
+    candidates = Dict{String,Vector{Int}}()
+    normalized = Dict{String,String}()
+    for i in 1:nrow(df)
+        url = get!(normalized, df.url[i]) do
+            Repology.normalize_url(df.url[i])
+        end
+        push!(get!(Vector{Int}, candidates, url), i)
+    end
+    downloads = Dict{String,Pair{String,String}}()
     repositories = Dict{String,String}()
-    for row in eachrow(filtered_df[filtered_df.link_type .== 2, :])
-        if haskey(repositories, row.url) && repositories[row.url] != row.effname
-            @warn "$(row.url) identifies both $(row.effname) and $(repositories[row.url])"
-            repositories[row.url] = "" # poison repos that are used for more than one project
+    families = Dict{String,Vector{String}}()
+    ambiguous = 0
+    for (url, rows) in candidates
+        project, support = resolve_claimants(df, rows; singleton_support)
+        if isnothing(project)
+            ambiguous += 1
+            write_ambiguity(diagnostics, df, rows, url, "project")
             continue
         end
-        repositories[row.url] = row.effname
-    end
-    filter!(!isempty∘last, repositories)
-
-    @info "gather downloads"
-    # For downloads (link_type == 1), the versions may be meaningfully linked to the URL
-    url_groups = combine(groupby(filtered_df[filtered_df.link_type .== 1, :], [:url, :effname]), :origversion => (x -> [unique(x)]) => :versions)
-    downloads = Dict{String, Pair{String,String}}()
-    for row in eachrow(url_groups)
-        length(row.versions) == 1 || continue
-        # Ignore download URLs that don't explicitly include the URL
-        # these are often things like -latest or the like
-        v = only(row.versions)
-        contains(row.url, v) || continue
-        if haskey(downloads, row.url) && downloads[row.url] != (row.effname => v)
-            @warn "$(row.url) identifies both $(row.effname => v) and $(downloads[row.url])"
-            downloads[row.url] = "" => ""
-            continue
+        aliases = unique!([url; df.url[rows]])
+        if any(i -> df.link_type[i] == 2, rows)
+            for alias in aliases
+                repositories[alias] = project
+            end
         end
-        downloads[row.url] = (row.effname => v)
+        if any(i -> df.link_type[i] == 1, rows)
+            versions = unique(df.origversion[i] for i in rows if df.effname[i] == project && df.link_type[i] == 1)
+            explicit = filter(v -> !isempty(v) && contains(lowercase(url), lowercase(v)), versions)
+            version = length(explicit) == 1 ? only(explicit) :
+                length(versions) == 1 && !occursin(r"\d", only(versions)) ? only(versions) : ""
+            if isempty(version)
+                ambiguous += 1
+                write_ambiguity(diagnostics, df, rows, url, "version")
+            end
+            for alias in aliases
+                downloads[alias] = project => version
+                families[alias] = sort!(collect(support[project]))
+            end
+        end
     end
-    filter!(!isempty∘last∘last, downloads)
+    return (; downloads, repositories, families, seen=Set(values(normalized)), ambiguous)
+end
 
-    return downloads, repositories
+function retain_unclaimed(old, current, seen)
+    return merge(filter(p -> !(Repology.normalize_url(first(p)) in seen), old), current)
 end
 
 function gather_cpes(pkg_cpes, manual_cpes)
@@ -140,23 +190,31 @@ function main(dump=DUMP_URL)
         read_dump(io)
     end
     @info "read $(nrow(df)) package links"
-    downloads, repositories = gather_links(df)
+    return export_data(df, pkg_cpes, manual_cpes)
+end
+
+function export_data(df, pkg_cpes, manual_cpes; data=ENV["REPOLOGY_DATA_OUT"],
+    mode=get(ENV, "REPOLOGY_SUPPORT_MODE", "all"),
+    diagnostic_path=get(ENV, "REPOLOGY_DIAGNOSTICS", data * "-ambiguous.toml"))
+    mkpath(data)
+    mode in ("all", "singleton") || error("REPOLOGY_SUPPORT_MODE must be all or singleton")
+    result = open(diagnostic_path, "w") do io
+        gather_links(df; singleton_support=mode == "singleton", diagnostics=io)
+    end
+    downloads, repositories = result.downloads, result.repositories
     cpes = gather_cpes(pkg_cpes, manual_cpes)
 
-    data = ENV["REPOLOGY_DATA_OUT"]
-    mkpath(data)
-
-    # Each dump only has the packages that distributions currently ship, so download URLs for older releases (and
-    # repositories that are ambiguous this week) drop out of it. Keep previously-exported entries (from the current
-    # data artifact) unless the new dump says otherwise.
     existing(file) = TOML.parsefile(joinpath(Repology.data_dir(), file))
     old_downloads = Dict(k => (v[1] => v[2]) for (k,v) in existing("downloads.toml"))
     old_repositories = Dict{String,String}(existing("repositories.toml"))
     write_project_changes(get(ENV, "REPOLOGY_PROJECT_CHANGES", ""),
         [(url, first(old_downloads[url]), first(p)) for (url, p) in downloads if haskey(old_downloads, url)],
         [(url, old_repositories[url], p) for (url, p) in repositories if haskey(old_repositories, url)])
-    downloads = merge(old_downloads, downloads)
-    repositories = merge(old_repositories, repositories)
+    downloads = retain_unclaimed(old_downloads, downloads, result.seen)
+    repositories = retain_unclaimed(old_repositories, repositories, result.seen)
+    old_support_path = joinpath(Repology.data_dir(), "download_families.toml")
+    old_support = isfile(old_support_path) ? TOML.parsefile(old_support_path) : Dict{String,Any}()
+    support = retain_unclaimed(old_support, result.families, result.seen)
     cpes = merge(Dict{String,Vector{String}}(k => String.(v) for (k,v) in existing("cpes.toml")), cpes)
 
     header = "# This file is autogenerated with data from https://repology.com"
@@ -172,6 +230,11 @@ function main(dump=DUMP_URL)
         println(io, header)
         TOML.print(io, cpes, sorted=true)
     end
+    open("$data/download_families.toml", "w") do io
+        println(io, header)
+        TOML.print(io, support; sorted=true)
+    end
+    @info "exported source mappings" mode downloads=length(downloads) repositories=length(repositories) ambiguous=result.ambiguous
 
     return 0
 end

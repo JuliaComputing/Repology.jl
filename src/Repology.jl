@@ -39,24 +39,34 @@ function download_data()
     end
     return DOWNLOAD_DATA[] = data
 end
-# Count how many known downloads support each project for a given prefix/regex pair
-vote!(map, prefix, pattern, project) =
-    (votes = get!(Dict{String,Int}, get!(Dict{String,Dict{String,Int}}, map, prefix), pattern);
-     votes[project] = get(votes, project, 0) + 1)
+function vote!(map, prefix, pattern, project, families)
+    votes = get!(Dict{String,Set{String}}, get!(Dict{String,Dict{String,Set{String}}}, map, prefix), pattern)
+    union!(get!(Set{String}, votes, project), families)
+end
 
-# Different projects sharing a prefix/regex pair are usually a bad alias in a single repository (like rsync3 for
-# rsync); use the pattern only when one project has at least twice the support of all others combined.
-function pattern_winner(votes)
-    best = argmax(p -> (votes[p], p), keys(votes))
-    return 2 * (sum(values(votes)) - votes[best]) <= votes[best] ? best : nothing
+# Require independent families and twice the support of all competing projects combined.
+function pattern_winner(votes; minimum_support=2)
+    isempty(votes) && return nothing
+    best = argmax(p -> (length(votes[p]), p), keys(votes))
+    count = length(votes[best])
+    return count >= minimum_support && 2 * (sum(length, values(votes)) - count) <= count ? best : nothing
 end
 
 const DOWNLOAD_PREFIX_REGEX_MAP = Ref{Dict{String,Vector{Pair{Regex,String}}}}()
 const MAX_PREFIX_LENGTH = 120
 function download_prefix_regex_map()
     isassigned(DOWNLOAD_PREFIX_REGEX_MAP) && return DOWNLOAD_PREFIX_REGEX_MAP[]
-    map = Dict{String,Dict{String,Dict{String,Int}}}()
-    for (k,v) in sort!(collect(download_data()), by=first)
+    path = joinpath(data_dir(), "download_families.toml")
+    families = isfile(path) ? TOML.parsefile(path) : nothing
+    return DOWNLOAD_PREFIX_REGEX_MAP[] = build_download_prefix_regex_map(download_data(), families)
+end
+
+function build_download_prefix_regex_map(downloads, families)
+    map = Dict{String,Dict{String,Dict{String,Set{String}}}}()
+    for (k,v) in sort!(collect(downloads), by=first)
+        # Older artifacts have no attribution; preserve their pre-sidecar behavior.
+        supporters = isnothing(families) ? [k] : get(families, k, String[])
+        isempty(supporters) && continue
         version = chopprefix(v[2], "v") # drop an optional v prefix
         length(version) >= 3 || continue # ensure non-trivial version numbers
         version[1] in '0':'9' || continue # ensure version starts with a digit
@@ -74,7 +84,7 @@ function download_prefix_regex_map()
         vpat = replace(replace(rest, version => "\\E(.*?)\\Q"; count=1), version => "\\E\\1\\Q")
         pattern = string("^\\Q", vpat, "\\E\$")
 
-        vote!(map, prefix, pattern, v[1])
+        vote!(map, prefix, pattern, v[1], supporters)
 
         # Now, secondarily, if a non-trivial prefix of the version number appears in the prefix, we also support that.
         munged_version = version
@@ -86,7 +96,7 @@ function download_prefix_regex_map()
                 vpat = replace(vpat, munged_version => "\\E.{$(length(munged_version))}\\Q") # just do a fixed-width wildcard
                 pattern = string("^\\Q", vpat, "\\E\$")
 
-                vote!(map, prefix, pattern, v[1])
+                vote!(map, prefix, pattern, v[1], supporters)
                 break
             end
         end
@@ -96,9 +106,9 @@ function download_prefix_regex_map()
         # Sort the suffixes by length so we always match the longest one first
         regex_map[prefix] = Pair{Regex,String}[Regex(p) => project
             for (p, votes) in sort!(collect(patterns), by=((p, _),)->(-length(p), p))
-            for project in (pattern_winner(votes),) if !isnothing(project)]
+            for project in (pattern_winner(votes; minimum_support=isnothing(families) ? 1 : 2),) if !isnothing(project)]
     end
-    return DOWNLOAD_PREFIX_REGEX_MAP[] = regex_map
+    return regex_map
 end
 
 const CPE_DATA = Ref{Dict{String,Any}}()

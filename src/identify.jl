@@ -95,6 +95,7 @@ function is_plausible_version(project, version)
     # A letter prefix is fine if the project's known versions share it (llama.cpp's b7821)
     prefix = match(r"^[A-Za-z]+(?=\d)", version)
     if !isnothing(prefix) && any(k -> occursin(Regex("^\\Q$(prefix.match)\\E\\d"), k), known)
+        known = Set(chopprefix(k, prefix.match) for k in known if occursin(Regex("^\\Q$(prefix.match)\\E\\d"), k))
         version = chopprefix(version, prefix.match)
     end
     # Underscores only introduce a qualifier (1.25.0_rc1); 8_3 is a munged tag

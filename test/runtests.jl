@@ -93,6 +93,27 @@ end
     end
 end
 
+@testset "curated legacy LLVM and Qt5 sources" begin
+    for version in ("11.0.0", "11.0.1", "12.0.1")
+        url = "https://github.com/llvm/llvm-project/releases/download/llvmorg-$version/libunwind-$version.src.tar.xz"
+        @test identify(url) == Identification("llvm", version, "url-pattern")
+    end
+    for module_name in ("qtcharts", "qtsvg", "qttools")
+        url = "https://download.qt.io/official_releases/qt/5.15/5.15.2/submodules/$module_name-everywhere-src-5.15.2.tar.xz"
+        @test identify(url) == Identification("qt", "5.15.2", "url-pattern")
+        qt6_url = "https://download.qt.io/official_releases/qt/6.10/6.10.2/submodules/$module_name-everywhere-src-6.10.2.tar.xz"
+        @test identify(qt6_url) == Identification("qt6" * chopprefix(module_name, "qt"), "6.10.2", "url-pattern")
+    end
+    @test identify("https://download.qt.io/official_releases/qt/5.15/5.15.2/submodules/qtbase-everywhere-src-5.15.2.tar.xz").project == "qtbase"
+    for url in ("", "https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.0/libunwind-11.0.1.src.tar.xz",
+                "https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.0/libunwind-11.0.0.src.tar.xz.asc",
+                "https://download.qt.io/official_releases/qt/5.15/5.15.2/submodules/qtsvg-everywhere-src-5.15.3.tar.xz",
+                "https://download.qt.io/official_releases/qt/5.15/5.15.2/submodules/qtsvg-everywhere-src-6.10.2.tar.xz",
+                "https://download.qt.io/official_releases/qt/6.10/5.15.2/submodules/qtsvg-everywhere-src-5.15.2.tar.xz")
+        @test !any(p -> occursin(first(p), url), Repology.curated_url_patterns())
+    end
+end
+
 @testset "curated upstream ownership" begin
     for (url, project) in (("https://github.com/dankamongmen/notcurses", "notcurses"),
                            ("https://github.com/google/s2geometry.git", "s2geometry"),

@@ -127,7 +127,7 @@ url_patterns = ["^https?://(?:www\\.)?tukaani\\.org/xz/xz-(\\d[^/]*)\\.tar\\.(?:
 url_patterns = ["^https?://(?:www\\.)?zlib\\.net/(?:fossils/)?zlib-(\\d[^/]*)\\.tar\\.(?:gz|xz|bz2)$"]
 
 [llvm]
-url_patterns = ["^\\Qhttps://github.com/llvm/llvm-project/releases/download/llvmorg-\\E(\\d[^/]*)/(?:libclc|clang)-\\1\\.src\\.tar\\.(?:xz|gz)$"]
+url_patterns = ["^\\Qhttps://github.com/llvm/llvm-project/releases/download/llvmorg-\\E(\\d[^/]*)/(?:libclc|clang|libunwind)-\\1\\.src\\.tar\\.(?:xz|gz)$"]
 
 [nodejs]
 url_patterns = ["^https?://(?:www\\.)?nodejs\\.org/(?:dist|download/release)/v(\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?)/node-v\\1(?:-[^/]+)?\\.(?:tar\\.(?:gz|xz)|zip|7z)$"]
@@ -171,7 +171,10 @@ url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\
 cpes = ["qt:qtbase"]
 
 [qt]
-url_patterns = ["^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/single/qt-\\E"]
+url_patterns = [
+    "^\\Qhttps://download.qt.io/official_releases/qt/\\E[^/]+/(.+)\\Q/single/qt-\\E",
+    "^https?://download\\.qt\\.io/official_releases/qt/5\\.[^/]+/(5\\.[^/]+)/submodules/(?:qtcharts|qtsvg|qttools)-everywhere-src-\\1\\.tar\\.(?:xz|gz)$",
+]
 cpes = ["qt:qt"]
 
 [qtshadertools]
